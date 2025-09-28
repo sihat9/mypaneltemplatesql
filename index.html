@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="ms">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CSV → Google Sheets → Excel/Template</title>
+  <meta name="color-scheme" content="light dark">
+  <style>
+    :root {
+      --radius: 12px;
+      --gap: 14px;
+      --border: #e5e7eb;
+      --text: #111827;
+      --muted: #6b7280;
+      --ok: #0a7b2d;
+      --err: #b30000;
+    }
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; 
+           margin: 24px auto; max-width: 1000px; padding: 0 16px; color: var(--text); }
+    h1 { font-size: 1.6rem; margin: 0 0 8px; }
+    p.lead { margin-top: 0; color: var(--muted); }
+    .grid { display: grid; gap: var(--gap); }
+    .grid.cols-2 { grid-template-columns: 1fr 1fr; }
+    .grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+    @media (max-width: 860px){ .grid.cols-2, .grid.cols-3 { grid-template-columns: 1fr; } }
+
+    .card { border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; 
+            box-shadow: 0 3px 16px rgba(0,0,0,.05); background: white; }
+    label { font-weight: 600; font-size: 0.95rem; }
+    input[type="text"], input[type="url"], input[type="number"], select {
+      width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 10px; 
+      background: #fff;
+    }
+    .muted { color: var(--muted); font-size: 0.92rem; }
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; 
+           border-radius: 10px; border: 1px solid #111827; background: #111827; color: #fff;
+           cursor: pointer; user-select: none; }
+    .btn.secondary { background: #fff; color: #111827; }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap); }
+    @media (max-width: 720px){ .row { grid-template-columns: 1fr; } }
+
+    .drop { border: 2px dashed #9ca3af; border-radius: var(--radius); padding: 20px; text-align: center; }
+    .drop.drag { border-color: #111827; background: #f9fafb; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { border: 1px solid #e5e7eb; padding: 6px 8px; text-align: left; }
+    th { background: #f8fafc; }
+
+    .status { margin-left: 6px; }
+    .ok { color: var(--ok); }
+    .err { color: var(--err); }
+
+    .hint { font-size: .88rem; color: var(--muted); }
+    code { background: #f3f4f6; padding: 2px 6px; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>CSV → Google Sheets → Excel / Template</h1>
+    <p class="lead">Muat naik CSV ke Google Sheet, kemudian muat turun semula sebagai Excel biasa — atau terus isi ke <em>Template</em> Google Sheet anda.</p>
+  </header>
+
+  <section class="card">
+    <div class="grid cols-2">
+      <div>
+        <label for="sheetId">Spreadsheet ID (Sumber/Target)</label>
+        <input id="sheetId" type="text" placeholder="1AbCdEfGhIj..." />
+        <div class="hint">Contoh URL: https://docs.google.com/spreadsheets/d/<strong>SPREADSHEET_ID</strong>/edit</div>
+      </div>
+      <div>
+        <label for="sheetName">Nama Sheet (tab)</label>
+        <input id="sheetName" type="text" placeholder="Sheet1" value="Sheet1" />
+      </div>
+    </div>
+
+    <div style="height:10px"></div>
+
+    <div id="drop" class="drop">
+      <strong>Seret & lepas</strong> fail <code>.csv</code> ke sini, atau 
+      <label class="btn secondary">Pilih Fail
+        <input id="file" type="file" accept=".csv,text/csv" style="display:none" />
+      </label>
+      <div class="muted">Pastikan encoding <strong>UTF-8</strong>. Pratonton 10 baris pertama akan dipaparkan.</div>
+    </div>
+
+    <div style="height:12px"></div>
+
+    <div class="row">
+      <div>
+        <label>Mode Import</label>
+        <div class="actions">
+          <label><input type="radio" name="mode" value="replace" checked> Replace (gantikan kepingan)</label>
+          <label><input type="radio" name="mode" value="append"> Append (tambah ke bawah)</label>
+        </div>
+      </div>
+      <div>
+        <label><input id="clearSheet" type="checkbox" checked> Kosongkan sheet sebelum tulis (disaran untuk Replace)</label>
+      </div>
+    </div>
+
+    <div style="height:12px"></div>
+
+    <div class="actions">
+      <button id="btnImport" class="btn" disabled>Import CSV → Sheet</button>
+      <button id="btnExportXlsx" class="btn secondary">Download Excel (Keseluruhan)</button>
+      <span id="status" class="status muted">Tiada fail.</span>
+    </div>
+  </section>
+
+  <div style="height:18px"></div>
+
+  <section id="previewWrap" class="card" style="display:none">
+    <h3>Pratonton CSV (10 baris pertama)</h3>
+    <div class="muted" id="filename"></div>
+    <div style="overflow:auto">
+      <table id="preview"></table>
+    </div>
+  </section>
+
+  <div style="height:18px"></div>
+
+  <section class="card">
+    <h3>Eksport Ikut Template (Header Matching)</h3>
+    <div class="grid cols-3">
+      <div>
+        <label for="templateId">Template Spreadsheet ID (Google Sheet)</label>
+        <input id="templateId" type="text" placeholder="1ZyXwV..." />
+        <div class="hint">Template perlu dalam format <strong>Google Spreadsheet</strong> (bukan .xlsx).</div>
+      </div>
+      <div>
+        <label for="templateSheetName">Nama Sheet (Template)</label>
+        <input id="templateSheetName" type="text" placeholder="(Kosong = guna sheet aktif)" />
+      </div>
+      <div>
+        <label for="filenameOut">Nama Fail .xlsx</label>
+        <input id="filenameOut" type="text" placeholder="SQL TEMPLATE (Diisi)" value="SQL TEMPLATE (Diisi)" />
+      </div>
+    </div>
+
+    <div style="height:10px"></div>
+
+    <div class="grid cols-3">
+      <div>
+        <label for="headerRow">Baris Header</label>
+        <input id="headerRow" type="number" min="1" value="1" />
+      </div>
+      <div>
+        <label for="dataStartRow">Baris Mula Data (Template)</label>
+        <input id="dataStartRow" type="number" min="2" value="2" />
+      </div>
+      <div style="display:flex; align-items:flex-end;">
+        <button id="btnExportTemplate" class="btn secondary" style="width:100%;">Download Ikut Template</button>
+      </div>
+    </div>
+    <div class="hint">Padanan adalah <em>case-insensitive</em> berdasarkan tajuk lajur di baris header. Lajur yang tiada padanan akan ditinggalkan kosong.</div>
+  </section>
+
+  <script>
+    // === Gantikan dengan Web App URL Apps Script anda ===
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwcoL2BuH__0BmXQfK3C2D_krslAb9FKqn1WBGlYOyI1G_DlULF-kVjTzxKc4AM-YI/exec';
+
+    // Elemen asas
+    const drop = document.getElementById('drop');
+    const fileInput = document.getElementById('file');
+    const sheetIdInput = document.getElementById('sheetId');
+    const sheetNameInput = document.getElementById('sheetName');
+    const statusEl = document.getElementById('status');
+    const btnImport = document.getElementById('btnImport');
+    const btnExportXlsx = document.getElementById('btnExportXlsx');
+    const btnExportTemplate = document.getElementById('btnExportTemplate');
+
+    const previewWrap = document.getElementById('previewWrap');
+    const previewTbl = document.getElementById('preview');
+    const filenameEl = document.getElementById('filename');
+
+    const templateIdInput = document.getElementById('templateId');
+    const templateSheetNameInput = document.getElementById('templateSheetName');
+    const headerRowInput = document.getElementById('headerRow');
+    const dataStartRowInput = document.getElementById('dataStartRow');
+    const filenameOutInput = document.getElementById('filenameOut');
+
+    const clearSheetChk = document.getElementById('clearSheet');
+
+    let csvText = '';
+    let fileName = '';
+
+    // Utiliti status
+    function setStatus(msg, cls) {
+      statusEl.textContent = msg;
+      statusEl.className = 'status ' + (cls || 'muted');
+    }
+
+    // Utiliti muat turun Base64 → fail
+    function downloadBase64(filename, mimeType, base64) {
+      try {
+        const byteChars = atob(base64);
+        const byteNumbers = new Array(byteChars.length);
+        for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = filename || 'download.xlsx'; a.click();
+        URL.revokeObjectURL(url);
+        setStatus('Muat turun berjaya.', 'ok');
+      } catch (e) {
+        setStatus('Gagal memuat turun: ' + e.message, 'err');
+      }
+    }
+
+    // Pratonton CSV (ringkas)
+    function parsePreview(text) {
+      const lines = text.split(/\r?\n/).filter(Boolean).slice(0, 10);
+      const rows = lines.map(l => l.split(','));
+      previewTbl.innerHTML = '';
+      rows.forEach((r, i) => {
+        const tr = document.createElement('tr');
+        r.forEach(c => {
+          const cell = document.createElement(i === 0 ? 'th' : 'td');
+          cell.textContent = c;
+          tr.appendChild(cell);
+        });
+        previewTbl.appendChild(tr);
+      });
+      previewWrap.style.display = rows.length ? 'block' : 'none';
+    }
+
+    function enableButtons() {
+      btnImport.disabled = !(csvText && sheetIdInput.value.trim());
+      // ExportXlsx perlu hanya sheetId
+      btnExportXlsx.disabled = !sheetIdInput.value.trim();
+      // ExportTemplate perlu templateId & sheetId
+      btnExportTemplate.disabled = !(templateIdInput.value.trim() && sheetIdInput.value.trim());
+    }
+
+    // Drag & drop
+    ['dragenter','dragover'].forEach(evt => drop.addEventListener(evt, e => {
+      e.preventDefault(); e.stopPropagation(); drop.classList.add('drag');
+    }));
+    ['dragleave','drop'].forEach(evt => drop.addEventListener(evt, e => {
+      e.preventDefault(); e.stopPropagation(); drop.classList.remove('drag');
+    }));
+    drop.addEventListener('drop', e => {
+      const f = e.dataTransfer.files && e.dataTransfer.files[0];
+      if (f) handleFile(f);
+    });
+    drop.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', e => {
+      const f = e.target.files && e.target.files[0];
+      if (f) handleFile(f);
+    });
+
+    function handleFile(file) {
+      if (!/\.csv$/i.test(file.name)) {
+        setStatus('Sila pilih fail .csv', 'err');
+        return;
+      }
+      fileName = file.name;
+      const reader = new FileReader();
+      reader.onload = () => {
+        csvText = reader.result || '';
+        filenameEl.textContent = fileName + ' — ' + (new Intl.NumberFormat().format(csvText.length)) + ' aksara';
+        parsePreview(csvText);
+        setStatus('Fail dimuat: ' + fileName, 'ok');
+        enableButtons();
+      };
+      reader.onerror = () => setStatus('Gagal membaca fail', 'err');
+      reader.readAsText(file, 'utf-8');
+    }
+
+    sheetIdInput.addEventListener('input', enableButtons);
+    templateIdInput.addEventListener('input', enableButtons);
+
+    // Import CSV → Sheet
+    btnImport.addEventListener('click', async () => {
+      try {
+        const sheetId = sheetIdInput.value.trim();
+        if (!sheetId) return setStatus('Sila masukkan Spreadsheet ID', 'err');
+        if (!csvText) return setStatus('Tiada kandungan CSV', 'err');
+
+        const sheetName = (sheetNameInput.value || 'Sheet1').trim();
+        const mode = document.querySelector('input[name="mode"]:checked').value;
+        const clearSheet = !!clearSheetChk.checked;
+
+        btnImport.disabled = true;
+        setStatus('Mengimport ke Google Sheet…');
+        const resp = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: 'importCsv',
+            sheetId, sheetName, csvText, mode, clearSheet
+          })
+        });
+        const data = await resp.json();
+        if (data && data.status === 'ok') {
+          setStatus(`Import berjaya: ${data.rowsWritten} baris ditulis ke "${data.sheetName}".`, 'ok');
+        } else {
+          setStatus('Ralat import: ' + (data && data.message ? data.message : 'Tidak diketahui'), 'err');
+        }
+      } catch (e) {
+        setStatus('Ralat jaringan (import): ' + e.message, 'err');
+      } finally {
+        btnImport.disabled = false;
+      }
+    });
+
+    // Export keseluruhan Spreadsheet → Excel
+    btnExportXlsx.addEventListener('click', async () => {
+      try {
+        const sheetId = sheetIdInput.value.trim();
+        if (!sheetId) return setStatus('Sila masukkan Spreadsheet ID', 'err');
+        btnExportXlsx.disabled = true;
+        setStatus('Menjana Excel (keseluruhan)…');
+        const resp = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: 'exportXlsx',
+            sheetId,
+            filename: 'ExportedSheet'
+          })
+        });
+        const data = await resp.json();
+        if (data && data.status === 'ok' && data.base64) {
+          downloadBase64(data.filename || 'export.xlsx',
+                         data.mimeType || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                         data.base64);
+        } else {
+          setStatus('Ralat export: ' + (data && data.message ? data.message : 'Tidak diketahui'), 'err');
+        }
+      } catch (e) {
+        setStatus('Ralat jaringan (export): ' + e.message, 'err');
+      } finally {
+        btnExportXlsx.disabled = false;
+      }
+    });
+
+    // Export Ikut Template (header-matching)
+    btnExportTemplate.addEventListener('click', async () => {
+      try {
+        const templateId = templateIdInput.value.trim();
+        const sourceSheetId = sheetIdInput.value.trim();
+        if (!templateId || !sourceSheetId) return setStatus('Template ID & Spreadsheet ID diperlukan.', 'err');
+
+        const sourceSheetName = (sheetNameInput.value || 'Sheet1').trim();
+        const templateSheetName = templateSheetNameInput.value.trim();
+        const headerRow = Number(headerRowInput.value || 1);
+        const dataStartRow = Number(dataStartRowInput.value || 2);
+        const filename = (filenameOutInput.value || 'Output').trim();
+
+        btnExportTemplate.disabled = true;
+        setStatus('Menjana Excel berdasarkan Template…');
+        const resp = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: 'exportTemplate',
+            templateId,
+            sourceSheetId,
+            sourceSheetName,
+            templateSheetName,
+            headerRow,
+            dataStartRow,
+            filename
+          })
+        });
+        const data = await resp.json();
+        if (data && data.status === 'ok' && data.base64) {
+          downloadBase64(data.filename || (filename + '.xlsx'),
+                         data.mimeType || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                         data.base64);
+        } else {
+          setStatus('Ralat export (template): ' + (data && data.message ? data.message : 'Tidak diketahui'), 'err');
+        }
+      } catch (e) {
+        setStatus('Ralat jaringan (template): ' + e.message, 'err');
+      } finally {
+        btnExportTemplate.disabled = false;
+      }
+    });
+
+    // Mula
+    enableButtons();
+  </script>
+</body>
+</html>
