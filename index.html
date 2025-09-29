@@ -7,7 +7,7 @@
   <style>
     :root{
       --bg:#0b1020; --card:#0c1428; --stroke:#0f213b; --text:#e6eefc; --muted:#9fb2d9;
-      --brand:#22c55e; --brand2:#10b981; --chip:#0a1326; --chip2:#0b1a3a; --err:#ef4444; --ok:#22c55e;
+      --brand:#22c55e; --brand2:#10b981; --err:#ef4444; --ok:#22c55e;
     }
     html,body{margin:0;height:100%;background:linear-gradient(180deg,var(--bg),#0a0f1a);color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial}
     *{box-sizing:border-box}
@@ -27,13 +27,12 @@
     input[type="text"], select, input[type="search"]{
       background:#0b162b;color:#e5e7eb;border:1px solid #12315d;border-radius:10px;padding:10px 12px;min-width:220px
     }
-    input[type="checkbox"]{transform:scale(1.1)}
+    input[type="checkbox"]{transform:scale(1.05)}
     .table{width:100%;border-collapse:collapse;background:#0b1222;border:1px solid var(--stroke);border-radius:12px;overflow:hidden}
-    .table th,.table td{padding:10px 12px;border-bottom:1px solid var(--stroke);font-size:14px}
+    .table th,.table td{padding:10px 12px;border-bottom:1px solid var(--stroke);font-size:14px;vertical-align:middle}
     .table th{background:#0b152a;text-align:left;color:#9fb2d9}
     .pill{padding:2px 8px;border-radius:999px;font-size:12px;border:1px solid #1e293b;background:#0a1222;color:#93c5fd}
     .ok{color:var(--ok)} .err{color:var(--err)}
-    .grid{display:grid;gap:12px}
     .drop{border:1.5px dashed #1e3a8a;border-radius:14px;background:linear-gradient(180deg,#09132a,#0a1428);padding:22px;text-align:center;cursor:pointer}
     .drop.drag{background:linear-gradient(180deg,#0b1a3a,#0a162f); border-color:#2563eb}
     .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
@@ -47,7 +46,7 @@
   <div class="row" style="margin-bottom:10px">
     <div class="grow">
       <div style="font-size:22px;font-weight:800;letter-spacing:.3px">Panel CSV → SQL Template XLSX</div>
-      <div class="muted">Muat naik berbilang CSV • Auto-detect panel dari nama fail • Export menepati templat • Pengurusan panel lengkap</div>
+      <div class="muted">Muat naik berbilang CSV • Auto-detect panel • Export templat • Pengurusan panel (tambah/edit/padam) termasuk tukar Kod</div>
     </div>
     <span class="pill mono" id="apiLabel">API</span>
   </div>
@@ -58,18 +57,18 @@
   </div>
 
   <!-- TAB 1: Panel Register -->
-  <section id="tab1" class="card grid" style="gap:12px">
+  <section id="tab1" class="card" style="display:block">
     <div class="toolbar">
       <input type="text" id="panelName" placeholder="Nama Panel (cth: AIA HEALTH SERVIS SDN BHD)" class="grow"/>
       <input type="text" id="panelCode" placeholder="Kod Panel (cth: 300-A0001)" />
       <label class="muted" style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="panelActive" checked/> Aktif</label>
-      <button class="btn" id="btnAdd">Simpan</button>
+      <button class="btn" id="btnAdd">Tambah</button>
       <button class="btn2" id="btnRefresh1">Refresh</button>
-      <span class="muted" id="panelHint">Isi nama & kod panel, kemudian Simpan.</span>
+      <span class="muted" id="panelHint">Tambah panel baharu atau edit/padam pada jadual di bawah.</span>
     </div>
 
-    <div class="row" style="justify-content:space-between">
-      <div class="muted">Senarai panel aktif dalam Sheet1.</div>
+    <div class="row" style="justify-content:space-between;margin:10px 0 6px">
+      <div class="muted">Senarai panel dalam <span class="mono">Sheet1</span>.</div>
       <input type="search" id="searchPanel" placeholder="Cari nama/kod…" />
     </div>
 
@@ -80,7 +79,7 @@
           <th>Nama Panel</th>
           <th style="width:180px">Kod Panel</th>
           <th style="width:90px">Aktif</th>
-          <th style="width:180px">Tindakan</th>
+          <th style="width:220px">Tindakan</th>
         </tr>
       </thead>
       <tbody id="panelTBody"></tbody>
@@ -88,7 +87,7 @@
   </section>
 
   <!-- TAB 2: Upload & Export -->
-  <section id="tab2" class="card grid" style="gap:14px; display:none">
+  <section id="tab2" class="card" style="display:none">
     <div class="row">
       <div class="grow">
         <div class="muted">API Web App</div>
@@ -120,7 +119,7 @@
       <tbody id="fileTBody"></tbody>
     </table>
 
-    <div class="card" id="outWrap" style="display:none">
+    <div class="card" id="outWrap" style="display:none;margin-top:12px">
       <div class="row">
         <div class="grow"><b>Hasil Eksport</b></div>
         <span class="pill" id="exportMeta"></span>
@@ -129,7 +128,7 @@
     </div>
   </section>
 
-  <div class="muted" style="margin-top:16px">Tip: pastikan Web App GAS anda dideploy “Anyone can access”. Kaedah POST menggunakan <span class="mono">payload=&lt;JSON&gt;</span> mengelak preflight, jadi tiada isu CORS.</div>
+  <div class="muted" style="margin-top:14px">Pastikan Web App dideploy “Anyone”. Kaedah POST guna <span class="mono">payload=&lt;JSON&gt;</span> (tiada preflight/CORS).</div>
 </div>
 
 <script>
@@ -138,7 +137,6 @@ const API_BASE = "https://script.google.com/macros/s/AKfycbwcoL2BuH__0BmXQfK3C2D
 
 /* ============== Helper: simple POST (no CORS preflight) ============== */
 function apiPost(payload){
-  // Elak preflight: hantar sebagai application/x-www-form-urlencoded
   const body = new URLSearchParams({ payload: JSON.stringify(payload) });
   return fetch(API_BASE, {
     method:'POST',
@@ -154,7 +152,7 @@ function setBusy(b){[els.btnAdd,els.btnRefresh1,els.btnProcess,els.btnRefreshPan
 const els = {
   apiLabel: byId('apiLabel'),
   apiBaseShow: byId('apiBaseShow'),
-  // tab
+  // nav
   tabBtns: Array.from(document.querySelectorAll('.tab')),
   tab1: byId('tab1'),
   tab2: byId('tab2'),
@@ -200,15 +198,17 @@ let PANEL_OPTIONS_HTML = '';
 async function loadPanels(){
   const res = await apiPost({action:'listPanels'});
   if(!res || !res.ok){ console.error(res); return; }
-  PANELS = (res.panels||[]).filter(p=>p.Active!==false);
+  PANELS = (res.panels||[]).filter(p=>p.PanelName); // semua, biar toggle aktif ikut nilai
   buildPanelOptions();
   renderPanelTable();
-  // tab2 summary
-  els.panelSummary.textContent = `Jumlah panel aktif: ${PANELS.length}`;
+  // tab2 summary (kira aktif)
+  const activeCount = PANELS.filter(p=>p.Active!==false).length;
+  els.panelSummary.textContent = `Jumlah panel aktif: ${activeCount}`;
 }
 function buildPanelOptions(){
+  const actives = PANELS.filter(p=>p.Active!==false);
   PANEL_OPTIONS_HTML = `<option value="">— pilih panel —</option>` +
-    PANELS.map(p => `<option value="${escapeHtml(p.PanelCode)}">${escapeHtml(p.PanelName)} — ${escapeHtml(p.PanelCode)}</option>`).join('');
+    actives.map(p => `<option value="${escapeHtml(p.PanelCode)}">${escapeHtml(p.PanelName)} — ${escapeHtml(p.PanelCode)}</option>`).join('');
 }
 
 /* ===================== TAB 1 – CRUD Panel ===================== */
@@ -231,32 +231,50 @@ function rowPanel(p, idx){
       <button class="btn3">Edit</button>
       <button class="btn3" style="margin-left:6px">Padam</button>
     </td>`;
-  const [ , , , , tdAct ] = tr.children;
-  const btnEdit = tdAct.children[0];
-  const btnDel  = tdAct.children[1];
+  const btnEdit = tr.children[4].children[0];
+  const btnDel  = tr.children[4].children[1];
 
   btnEdit.addEventListener('click', ()=>{
-    // Convert row to editable
+    // editable row — boleh ubah Nama, Kod, Aktif
     tr.innerHTML = `
       <td>${idx+1}</td>
       <td><input type="text" value="${escapeHtml(p.PanelName)}" style="width:100%"/></td>
-      <td><span class="mono">${escapeHtml(p.PanelCode)}</span></td>
+      <td><input type="text" value="${escapeHtml(p.PanelCode)}" style="width:160px"/></td>
       <td><label style="display:flex;gap:6px;align-items:center"><input type="checkbox" ${p.Active!==false?'checked':''}/> Aktif</label></td>
       <td>
         <button class="btn3">Simpan</button>
         <button class="btn3" style="margin-left:6px">Batal</button>
       </td>`;
     const inputName = tr.children[1].querySelector('input');
+    const inputCode = tr.children[2].querySelector('input');
     const chkActive = tr.children[3].querySelector('input[type="checkbox"]');
     const bSave = tr.children[4].children[0];
     const bCancel = tr.children[4].children[1];
 
     bSave.addEventListener('click', async ()=>{
+      const newName = inputName.value.trim();
+      const newCode = inputCode.value.trim();
+      if(!newName || !newCode){ alert('Nama & Kod wajib.'); return; }
       setBusy(true);
-      const res = await apiPost({action:'updatePanel', panelCode:p.PanelCode, newName: inputName.value, active: chkActive.checked});
-      setBusy(false);
-      if(!res || !res.ok){ alert('Gagal kemaskini panel'); return; }
-      await refreshPanelsBoth();
+      try{
+        if (newCode !== p.PanelCode) {
+          // 1) tukar kod (aksi baru di backend)
+          const r1 = await apiPost({action:'renamePanelCode', oldCode:p.PanelCode, newCode:newCode});
+          if(!r1 || !r1.ok){ throw new Error(r1 && r1.error || 'Gagal tukar kod'); }
+          // 2) kemaskini nama/aktif (guna kod baharu)
+          const r2 = await apiPost({action:'updatePanel', panelCode:newCode, newName:newName, active:chkActive.checked});
+          if(!r2 || !r2.ok){ throw new Error(r2 && r2.error || 'Gagal kemaskini panel'); }
+        } else {
+          // kod tak berubah → hanya update nama/aktif
+          const r = await apiPost({action:'updatePanel', panelCode:p.PanelCode, newName:newName, active:chkActive.checked});
+          if(!r || !r.ok){ throw new Error(r && r.error || 'Gagal kemaskini panel'); }
+        }
+        await refreshPanelsBoth();
+      }catch(e){
+        alert(String(e.message||e));
+      }finally{
+        setBusy(false);
+      }
     });
     bCancel.addEventListener('click', renderPanelTable);
   });
@@ -266,7 +284,7 @@ function rowPanel(p, idx){
     setBusy(true);
     const res = await apiPost({action:'deletePanel', panelCode:p.PanelCode});
     setBusy(false);
-    if(!res || !res.ok){ alert('Gagal padam panel'); return; }
+    if(!res || !res.ok){ alert(res && res.error ? res.error : 'Gagal padam panel'); return; }
     await refreshPanelsBoth();
   });
 
@@ -281,7 +299,7 @@ els.btnAdd.addEventListener('click', async ()=>{
   setBusy(true);
   const res = await apiPost({action:'createPanel', panelName:name, panelCode:code, active});
   setBusy(false);
-  if(!res || !res.ok){ alert(res && res.error ? res.error : 'Gagal simpan panel'); return; }
+  if(!res || !res.ok){ alert(res && res.error ? res.error : 'Gagal tambah panel'); return; }
   els.panelName.value=''; els.panelCode.value='';
   await refreshPanelsBoth();
 });
@@ -291,10 +309,11 @@ els.searchPanel.addEventListener('input', renderPanelTable);
 async function refreshPanelsBoth(){
   const res = await apiPost({action:'listPanels'});
   if(res && res.ok){
-    PANELS = (res.panels||[]).filter(p=>p.Active!==false);
+    PANELS = (res.panels||[]).filter(p=>p.PanelName);
     buildPanelOptions();
     renderPanelTable();
-    els.panelSummary.textContent = `Jumlah panel aktif: ${PANELS.length}`;
+    const activeCount = PANELS.filter(p=>p.Active!==false).length;
+    els.panelSummary.textContent = `Jumlah panel aktif: ${activeCount}`;
   }
 }
 
@@ -302,7 +321,8 @@ async function refreshPanelsBoth(){
 let filesQueue = []; // {id,name,text,panelCode,auto,status}
 
 function buildPanelKeys(){
-  return PANELS.map(p=>{
+  const actives = PANELS.filter(p=>p.Active!==false);
+  return actives.map(p=>{
     const code = String(p.PanelCode||'').toUpperCase();
     const name = String(p.PanelName||'').toUpperCase();
     const clean = name.replace(/[^A-Z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
@@ -375,10 +395,7 @@ async function processAll(){
   try{ res = await apiPost(payload); }catch(e){ setBusy(false); alert('Ralat rangkaian/API.'); return; }
   setBusy(false);
   if(!res || !res.ok){ console.error(res); alert('Proses gagal: ' + (res && res.error || 'Unknown')); return; }
-  // Tanda status OK
-  (res.files||[]).forEach(f=>{
-    filesQueue.forEach(q=>{ if(q.panelCode===f.panelCode) q.status='OK'; });
-  });
+  (res.files||[]).forEach(f=>{ filesQueue.forEach(q=>{ if(q.panelCode===f.panelCode) q.status='OK'; }); });
   renderQueue();
   renderResults(res.files||[]);
 }
@@ -411,12 +428,38 @@ async function cleanNow(){
 }
 
 /* ===================== Events & Init ===================== */
+// Tab
+document.querySelectorAll('.tab').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    btn.classList.add('active');
+    const id=btn.dataset.tab;
+    els.tab1.style.display = id==='tab1' ? 'block':'none';
+    els.tab2.style.display = id==='tab2' ? 'block':'none';
+  });
+});
+
 // Tab1 CRUD
+els.btnAdd.addEventListener('click', async ()=>{
+  const name = els.panelName.value.trim();
+  const code = els.panelCode.value.trim();
+  const active = els.panelActive.checked;
+  if(!name || !code){ alert('Isi Nama Panel dan Kod Panel.'); return; }
+  setBusy(true);
+  const res = await apiPost({action:'createPanel', panelName:name, panelCode:code, active});
+  setBusy(false);
+  if(!res || !res.ok){ alert(res && res.error ? res.error : 'Gagal tambah panel'); return; }
+  els.panelName.value=''; els.panelCode.value='';
+  await refreshPanelsBoth();
+});
 els.btnRefresh1.addEventListener('click', refreshPanelsBoth);
+els.searchPanel.addEventListener('input', renderPanelTable);
+
 // Tab2 actions
 els.btnRefreshPanels.addEventListener('click', refreshPanelsBoth);
 els.btnProcess.addEventListener('click', processAll);
 els.btnClean.addEventListener('click', cleanNow);
+
 // Upload widgets
 els.drop.addEventListener('click', ()=> els.fileInput.click());
 els.fileInput.addEventListener('change', e=> addFiles(e.target.files));
@@ -425,7 +468,7 @@ els.fileInput.addEventListener('change', e=> addFiles(e.target.files));
 els.drop.addEventListener('drop', e=>{ const dt=e.dataTransfer; if(dt&&dt.files) addFiles(dt.files); });
 
 // Boot
-loadPanels(); // isi PANELS dan render jadual
+loadPanels();
 </script>
 </body>
 </html>
