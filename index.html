@@ -27,7 +27,6 @@
     input,select,button,textarea{
       width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:#0b1220;color:var(--text)
     }
-    input[readonly]{opacity:.8}
     button{cursor:pointer}
     .btn{background:var(--muted)}
     .btn-primary{background:var(--accent);color:#04110a;border-color:#0c3}
@@ -114,7 +113,7 @@
       <div>
         <label>API Web App</label>
         <input id="apiBase" placeholder="https://script.google.com/macros/s/XXX/exec" />
-        <p class="hint">URL Web App Apps Script (akhiran <span class="mono">/exec</span>). Anda boleh biarkan nilai lalai diisi.</p>
+        <p class="hint">URL Web App Apps Script (akhiran <span class="mono">/exec</span>).</p>
       </div>
     </div>
 
@@ -152,48 +151,53 @@
 
 <script>
 /* ======================= KONFIGURASI ======================= */
-// URL Web App Apps Script anda (akhiran /exec) — telah diisi dengan URL yang anda beri.
 const DEFAULT_API_BASE = 'https://script.google.com/macros/s/AKfycbwcoL2BuH__0BmXQfK3C2D_krslAb9FKqn1WBGlYOyI1G_DlULF-kVjTzxKc4AM-YI/exec';
 
 /* ======================= UTIL RINGKAS ======================= */
-const $ = sel => document.querySelector(sel);
-const $$ = sel => Array.from(document.querySelectorAll(sel));
-const formatRM = n => isNaN(n) ? '-' : new Intl.NumberFormat('ms-MY',{style:'currency',currency:'MYR'}).format(n);
-
-function showStatus(el, text, type='good'){
+function $(sel){ return document.querySelector(sel); }
+function $$(sel){ return Array.from(document.querySelectorAll(sel)); }
+function formatRM(n){
+  if(isNaN(n)) return '-';
+  try{ return new Intl.NumberFormat('ms-MY',{style:'currency',currency:'MYR'}).format(n); }
+  catch(_){ return 'RM ' + Number(n).toFixed(2); }
+}
+function showStatus(el, text, type){
+  var cls = 'status';
+  if(type==='good') cls += ' good';
+  else if(type==='bad') cls += ' bad';
+  el.className = cls;
   el.textContent = text;
-  el.className = 'status ' + (type==='good'?'good':(type==='bad'?'bad':'')); 
   el.hidden = false;
 }
 function hideStatus(el){ el.hidden = true; }
 
 /* ======================= NAV TAB ======================= */
-$$('.tab-btn').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    $$('.tab-btn').forEach(b=>b.classList.remove('active'));
+$$('.tab-btn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    $$('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
     btn.classList.add('active');
-    const tab = btn.dataset.tab;
-    $('#tab-panel').hidden = tab!=='panel';
-    $('#tab-upload').hidden = tab!=='upload';
+    var tab = btn.getAttribute('data-tab');
+    $('#tab-panel').hidden = (tab!=='panel');
+    $('#tab-upload').hidden = (tab!=='upload');
   });
 });
 
 /* ======================= API FETCH (CORS-friendly) ======================= */
 function apiBase(){
-  const v = $('#apiBase').value.trim();
+  var v = $('#apiBase').value.trim();
   return v || DEFAULT_API_BASE;
 }
 
-/** GUNA form-encoded supaya elak preflight CORS */
+/** Guna form-encoded supaya elak preflight CORS */
 async function apiPost(payload){
-  const res = await fetch(apiBase(), {
+  var res = await fetch(apiBase(), {
     method: 'POST',
     headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'},
-    body: 'payload=' + encodeURIComponent(JSON.stringify(payload)),
+    body: 'payload=' + encodeURIComponent(JSON.stringify(payload))
   });
   if(!res.ok){
-    const t = await res.text();
-    throw new Error(`HTTP ${res.status}: ${t}`);
+    var t = await res.text();
+    throw new Error('HTTP ' + res.status + ': ' + t);
   }
   return await res.json();
 }
@@ -201,110 +205,125 @@ async function apiPost(payload){
 /* ======================= PANEL MANAGEMENT ======================= */
 async function loadPanels(){
   try{
-    const out = await apiPost({action:'listPanels'});
-    const tb = $('#panelTable tbody');
-    tb.innerHTML='';
-    (out.panels||[]).forEach((p,idx)=>{
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${idx+1}</td>
-        <td class="mono">${p.PanelCode||''}</td>
-        <td>${p.PanelName||''}</td>
-        <td>${p.Active?'<span class="pill">Active</span>':'-'}</td>
-        <td class="flex">
-          <button class="btn small" data-act="edit" data-code="${p.PanelCode}">Edit</button>
-          <button class="btn btn-danger small" data-act="del" data-code="${p.PanelCode}">Padam</button>
-        </td>`;
+    var out = await apiPost({action:'listPanels'});
+    var tb = $('#panelTable tbody');
+    tb.innerHTML = '';
+    (out.panels||[]).forEach(function(p, idx){
+      var tr = document.createElement('tr');
+      var statusHtml = p.Active ? '<span class="pill">Active</span>' : '-';
+      var html = ''
+        + '<td>' + (idx+1) + '</td>'
+        + '<td class="mono">' + (p.PanelCode||'') + '</td>'
+        + '<td>' + (p.PanelName||'') + '</td>'
+        + '<td>' + statusHtml + '</td>'
+        + '<td class="flex">'
+          + '<button class="btn small" data-act="edit" data-code="' + (p.PanelCode||'') + '">Edit</button>'
+          + '<button class="btn btn-danger small" data-act="del" data-code="' + (p.PanelCode||'') + '">Padam</button>'
+        + '</td>';
+      tr.innerHTML = html;
       tb.appendChild(tr);
     });
   }catch(err){
-    showStatus($('#panelStatus'), 'Ralat memuat panel: '+err.message, 'bad');
+    showStatus($('#panelStatus'), 'Ralat memuat panel: ' + err.message, 'bad');
   }
 }
-
 $('#btnRefreshPanels').addEventListener('click', loadPanels);
 
-$('#btnAddPanel').addEventListener('click', async ()=>{
-  const name = $('#panelName').value.trim();
-  const code = $('#panelCode').value.trim();
-  if(!name || !code){ showStatus($('#panelStatus'),'Isi Nama & Kod Panel','bad'); return; }
+$('#btnAddPanel').addEventListener('click', async function(){
+  var name = $('#panelName').value.trim();
+  var code = $('#panelCode').value.trim();
+  if(!name || !code){
+    showStatus($('#panelStatus'),'Isi Nama & Kod Panel','bad'); 
+    return;
+  }
   try{
     await apiPost({action:'createPanel', panelName:name, panelCode:code, active:true});
-    showStatus($('#panelStatus'),'Panel ditambah.', 'good');
+    showStatus($('#panelStatus'),'Panel ditambah.','good');
     $('#panelName').value=''; $('#panelCode').value='';
     await loadPanels();
   }catch(err){
-    showStatus($('#panelStatus'),'Gagal tambah: '+err.message,'bad');
+    showStatus($('#panelStatus'),'Gagal tambah: ' + err.message,'bad');
   }
 });
 
-$('#panelTable').addEventListener('click', async (e)=>{
-  const btn = e.target.closest('button'); if(!btn) return;
-  const code = btn.dataset.code;
-  if(btn.dataset.act==='del'){
-    if(!confirm('Padam panel '+code+'?')) return;
+$('#panelTable').addEventListener('click', async function(e){
+  var btn = e.target.closest('button'); 
+  if(!btn) return;
+  var code = btn.getAttribute('data-code');
+  var act = btn.getAttribute('data-act');
+  if(act==='del'){
+    if(!confirm('Padam panel ' + code + '?')) return;
     try{
       await apiPost({action:'deletePanel', panelCode:code});
       await loadPanels();
       showStatus($('#panelStatus'),'Panel dipadam.','good');
     }catch(err){
-      showStatus($('#panelStatus'),'Gagal padam: '+err.message,'bad');
+      showStatus($('#panelStatus'),'Gagal padam: ' + err.message,'bad');
     }
-  }
-  if(btn.dataset.act==='edit'){
-    const newName = prompt('Nama baharu untuk '+code+':'); if(newName==null) return;
-    const active = confirm('Tetapkan Active? OK=Active, Cancel=Inactive');
+  } else if(act==='edit'){
+    var newName = prompt('Nama baharu untuk ' + code + ':');
+    if(newName==null) return;
+    var active = confirm('Tetapkan Active? OK=Active, Cancel=Inactive');
     try{
       await apiPost({action:'updatePanel', panelCode:code, newName:newName, active:active});
       await loadPanels();
       showStatus($('#panelStatus'),'Panel dikemas kini.','good');
     }catch(err){
-      showStatus($('#panelStatus'),'Gagal kemas kini: '+err.message,'bad');
+      showStatus($('#panelStatus'),'Gagal kemas kini: ' + err.message,'bad');
     }
   }
 });
 
-$('#btnImportOnce').addEventListener('click', async ()=>{
+$('#btnImportOnce').addEventListener('click', async function(){
   try{
-    const res = await apiPost({action:'importPanelsOnce'});
-    showStatus($('#panelStatus'), `Import selesai. Ditambah: ${res.added||0}.`, 'good');
+    var res = await apiPost({action:'importPanelsOnce'});
+    var added = (res && typeof res.added==='number') ? res.added : 0;
+    showStatus($('#panelStatus'), 'Import selesai. Ditambah: ' + added + '.', 'good');
     await loadPanels();
   }catch(err){
-    showStatus($('#panelStatus'), 'Gagal import: '+err.message, 'bad');
+    showStatus($('#panelStatus'), 'Gagal import: ' + err.message, 'bad');
   }
 });
 
 /* ======================= UPLOAD CSV ======================= */
-let knownPanels = []; // untuk dropdown & autokesan
-let pendingFiles = []; // {file, name, text, panelCode?, stats?}
+var knownPanels = []; // untuk dropdown & autokesan
+var pendingFiles = []; // {file, name, text, panelCode?, stats?}
 
 async function refreshKnownPanels(){
   try{
-    const out = await apiPost({action:'listPanels'});
-    knownPanels = (out.panels||[]).filter(p=>p.Active!==false);
+    var out = await apiPost({action:'listPanels'});
+    var arr = out && out.panels ? out.panels : [];
+    knownPanels = arr.filter(function(p){ return p.Active!==false; });
   }catch(e){
     knownPanels = [];
   }
 }
 
 function panelDropdownHtml(selected){
-  const opts = knownPanels.map(p=>`<option value="${(p.PanelCode||'').toUpperCase()}" ${selected && selected.toUpperCase()===(p.PanelCode||'').toUpperCase()?'selected':''}>${(p.PanelCode||'').toUpperCase()} — ${p.PanelName||''}</option>`).join('');
-  return `<select class="panel-select"><option value="">-- Pilih Panel --</option>${opts}</select>`;
+  var options = ['<option value="">-- Pilih Panel --</option>'];
+  for(var i=0;i<knownPanels.length;i++){
+    var p = knownPanels[i];
+    var code = (p.PanelCode||'').toUpperCase();
+    var name = p.PanelName || '';
+    var sel = (selected && selected.toUpperCase()===code) ? ' selected' : '';
+    options.push('<option value="'+code+'"' + sel + '>'+code+' — '+name+'</option>');
+  }
+  return '<select class="panel-select">' + options.join('') + '</select>';
 }
 
 function inferPanelFromName(name){
-  const upper = (name||'').toUpperCase();
-  for(const p of knownPanels){
-    const code = (p.PanelCode||'').toUpperCase();
-    if(code && upper.includes(code)) return code;
+  var upper = (name||'').toUpperCase();
+  for(var i=0;i<knownPanels.length;i++){
+    var code = (knownPanels[i].PanelCode||'').toUpperCase();
+    if(code && upper.indexOf(code)>=0) return code;
   }
   return '';
 }
 
-async function readFileAsText(file){
-  return new Promise((res,rej)=>{
-    const fr = new FileReader();
-    fr.onload = () => res(fr.result);
+function readFileAsText(file){
+  return new Promise(function(res,rej){
+    var fr = new FileReader();
+    fr.onload = function(){ res(fr.result); };
     fr.onerror = rej;
     fr.readAsText(file);
   });
@@ -312,144 +331,178 @@ async function readFileAsText(file){
 
 function parseCsvQuickStats(text){
   try{
-    const rows = text.split(/\r?\n/).map(r=>r.split(','));
+    var lines = text.split(/\r?\n/);
+    var rows = [];
+    for(var i=0;i<lines.length;i++){
+      rows.push(lines[i].split(','));
+    }
     if(rows.length<2) return null;
-    const header = rows[0].map(h=>h.trim());
-    const idxAmount = header.findIndex(h=>/total\s*payment/i.test(h) || /rm\)/i.test(h));
-    const idxDate = header.findIndex(h=>/date/i.test(h) || /tarikh/i.test(h));
-    let count=0, sum=0, months={};
-    for(let i=1;i<rows.length;i++){
-      const r = rows[i];
-      if(!r || r.length===0 || r.every(x=>!x)) continue;
+    var header = rows[0].map(function(h){ return (h||'').trim(); });
+    var idxAmount = -1, idxDate = -1;
+    for(var h=0; h<header.length; h++){
+      var hh = header[h].toLowerCase();
+      if(idxAmount<0 && (hh.indexOf('total')>=0 || hh.indexOf('rm)')>=0)) idxAmount = h;
+      if(idxDate<0 && (hh.indexOf('date')>=0 || hh.indexOf('tarikh')>=0)) idxDate = h;
+    }
+    var count=0, sum=0;
+    var months = {}; // { '2025-09': n, ...}
+    for(var r=1;r<rows.length;r++){
+      var row = rows[r];
+      if(!row || row.length===0) continue;
+      var allEmpty = true;
+      for(var c=0;c<row.length;c++){ if(row[c] && row[c].trim()!==''){ allEmpty=false; break; } }
+      if(allEmpty) continue;
       count++;
       if(idxAmount>=0){
-        const raw = (r[idxAmount]||'').replace(/[^\d\.\-]/g,'').replace(/,/g,'');
-        const f = parseFloat(raw); if(!isNaN(f)) sum+=f;
+        var raw = (row[idxAmount]||'').replace(/[^\d\.\-]/g,'').replace(/,/g,'');
+        var f = parseFloat(raw);
+        if(!isNaN(f)) sum += f;
       }
       if(idxDate>=0){
-        const d = new Date(r[idxDate]);
-        if(!isNaN(d)) {
-          const mm = String(d.getMonth()+1).padStart(2,'0');
-          const yy = d.getFullYear();
-          const key = `${yy}-${mm}`;
+        var d = new Date(row[idxDate]);
+        if(!isNaN(d)){
+          var mm = String(d.getMonth()+1).padStart(2,'0');
+          var yy = d.getFullYear();
+          var key = yy + '-' + mm;
           months[key] = (months[key]||0)+1;
         }
       }
     }
-    return {count,sum,months};
-  }catch(e){ return null; }
+    return {count:count, sum:sum, months:months};
+  }catch(e){
+    return null;
+  }
 }
 
 function renderFileTable(){
-  const tb = $('#fileTable tbody');
+  var tb = $('#fileTable tbody');
   tb.innerHTML = '';
-  for(const item of pendingFiles){
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>
-        <div class="mono">${item.name}</div>
-        ${item.stats?`<div class="small hint">Anggaran: ${item.stats.count} baris, Jumlah ≈ ${formatRM(item.stats.sum)}</div>`:''}
-      </td>
-      <td>${panelDropdownHtml(item.panelCode||inferPanelFromName(item.name))}</td>
-      <td>
-        <div class="small">Bulan dominan (anggaran klien): ${
-          item.stats && Object.keys(item.stats.months||{}).length
-            ? Object.entries(item.stats.months).sort((a,b)=>b[1]-a[1])[0][0]
-            : '-'
-        }</div>
-      </td>
-      <td>
-        <button class="btn btn-danger small btn-remove">Buang</button>
-      </td>
-    `;
+  for(var i=0;i<pendingFiles.length;i++){
+    var item = pendingFiles[i];
+    var statsLine = '';
+    if(item.stats){
+      statsLine = '<div class="small hint">Anggaran: ' + item.stats.count + ' baris, Jumlah ≈ ' + formatRM(item.stats.sum) + '</div>';
+    }
+    var monthDominant = '-';
+    if(item.stats && item.stats.months){
+      var entries = Object.entries(item.stats.months).sort(function(a,b){ return b[1]-a[1]; });
+      if(entries.length){ monthDominant = entries[0][0]; }
+    }
+    var inferred = item.panelCode || inferPanelFromName(item.name);
+    var dropdown = panelDropdownHtml(inferred);
+
+    var tr = document.createElement('tr');
+    var html = ''
+      + '<td><div class="mono">' + item.name + '</div>' + statsLine + '</td>'
+      + '<td>' + dropdown + '</td>'
+      + '<td><div class="small">Bulan dominan (anggaran klien): ' + monthDominant + '</div></td>'
+      + '<td><button class="btn btn-danger small btn-remove">Buang</button></td>';
+    tr.innerHTML = html;
     tb.appendChild(tr);
   }
-  $$('#fileTable tbody tr').forEach((tr, idx)=>{
-    const sel = tr.querySelector('.panel-select');
-    sel.addEventListener('change', e=>{
+
+  var trs = $$('#fileTable tbody tr');
+  trs.forEach(function(tr, idx){
+    var sel = tr.querySelector('.panel-select');
+    sel.addEventListener('change', function(e){
       pendingFiles[idx].panelCode = e.target.value;
     });
-    const btn = tr.querySelector('.btn-remove');
-    btn.addEventListener('click', ()=>{
+    var btn = tr.querySelector('.btn-remove');
+    btn.addEventListener('click', function(){
       pendingFiles.splice(idx,1);
       renderFileTable();
     });
   });
 }
 
-$('#btnScanFiles').addEventListener('click', async ()=>{
-  const files = Array.from($('#csvFiles').files||[]);
-  if(!files.length){ showStatus($('#uploadStatus'],'Sila pilih fail CSV dahulu.','bad'); return; }
+$('#btnScanFiles').addEventListener('click', async function(){
+  var files = Array.from($('#csvFiles').files||[]);
+  if(!files.length){
+    showStatus($('#uploadStatus'),'Sila pilih fail CSV dahulu.','bad');
+    return;
+  }
   await refreshKnownPanels();
   pendingFiles = [];
   showStatus($('#uploadStatus'),'Mengimbas fail…','good');
-  for(const f of files){
-    const text = await readFileAsText(f);
-    const stats = parseCsvQuickStats(text);
-    pendingFiles.push({file:f, name:f.name, text, stats});
+  for(var i=0;i<files.length;i++){
+    var f = files[i];
+    var text = await readFileAsText(f);
+    var stats = parseCsvQuickStats(text);
+    pendingFiles.push({file:f, name:f.name, text:text, stats:stats});
   }
   hideStatus($('#uploadStatus'));
   renderFileTable();
 });
 
-async function toBase64(file){
-  return new Promise((resolve,reject)=>{
-    const fr = new FileReader();
-    fr.onload = () => resolve(fr.result.split(',')[1]);
+function toBase64(file){
+  return new Promise(function(resolve,reject){
+    var fr = new FileReader();
+    fr.onload = function(){ 
+      var s = fr.result;
+      var base64 = s.split(',')[1];
+      resolve(base64);
+    };
     fr.onerror = reject;
     fr.readAsDataURL(file);
   });
 }
 
-$('#btnProcess').addEventListener('click', async ()=>{
-  if(!pendingFiles.length){ showStatus($('#uploadStatus'),'Tiada fail untuk diproses.','bad'); return; }
+$('#btnProcess').addEventListener('click', async function(){
+  if(!pendingFiles.length){
+    showStatus($('#uploadStatus'),'Tiada fail untuk diproses.','bad');
+    return;
+  }
   await refreshKnownPanels();
-  for(const it of pendingFiles){
-    it.panelCode = it.panelCode || inferPanelFromName(it.name);
+  for(var i=0;i<pendingFiles.length;i++){
+    var it = pendingFiles[i];
     if(!it.panelCode){
-      showStatus($('#uploadStatus'), `Panel tidak ditetapkan untuk fail: ${it.name}. Sila pilih di dropdown.`, 'bad');
+      it.panelCode = inferPanelFromName(it.name);
+    }
+    if(!it.panelCode){
+      showStatus($('#uploadStatus'), 'Panel tidak ditetapkan untuk fail: ' + it.name + '. Sila pilih di dropdown.', 'bad');
       return;
     }
   }
   showStatus($('#uploadStatus'),'Memuat naik & memproses di server…','good');
 
   try{
-    const filesPayload = [];
-    for(const it of pendingFiles){
-      const b64 = await toBase64(it.file);
-      filesPayload.push({name: it.name, content: b64, encoding: 'base64', panelCode: it.panelCode});
+    var filesPayload = [];
+    for(var j=0;j<pendingFiles.length;j++){
+      var it2 = pendingFiles[j];
+      var b64 = await toBase64(it2.file);
+      filesPayload.push({name: it2.name, content: b64, encoding: 'base64', panelCode: it2.panelCode});
     }
-    const res = await apiPost({action:'processCsvFiles', files: filesPayload});
+    var res = await apiPost({action:'processCsvFiles', files: filesPayload});
     hideStatus($('#uploadStatus'));
-    const out = res.files || [];
-    const tb = $('#resultTable tbody'); tb.innerHTML='';
+    var out = (res && res.files) ? res.files : [];
+    var tb = $('#resultTable tbody'); 
+    tb.innerHTML='';
     if(!out.length){
       $('#resultsCard').hidden = false;
-      tb.innerHTML = `<tr><td colspan="5" class="small">Tiada fail dijana.</td></tr>`;
+      tb.innerHTML = '<tr><td colspan="5" class="small">Tiada fail dijana.</td></tr>';
       return;
     }
-    out.forEach(f=>{
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td class="mono">${f.panelCode}</td>
-        <td class="mono">${f.filename}</td>
-        <td>${f.rows}</td>
-        <td>${formatRM(f.amountSum)}</td>
-        <td><a class="button-link" target="_blank" rel="noopener" href="${f.downloadUrl}">Muat turun</a></td>
-      `;
+    for(var k=0;k<out.length;k++){
+      var f = out[k];
+      var tr = document.createElement('tr');
+      var rowHtml = ''
+        + '<td class="mono">' + f.panelCode + '</td>'
+        + '<td class="mono">' + f.filename + '</td>'
+        + '<td>' + f.rows + '</td>'
+        + '<td>' + formatRM(f.amountSum) + '</td>'
+        + '<td><a class="button-link" target="_blank" rel="noopener" href="' + f.downloadUrl + '">Muat turun</a></td>';
+      tr.innerHTML = rowHtml;
       tb.appendChild(tr);
-    });
+    }
     $('#resultsCard').hidden = false;
   }catch(err){
-    showStatus($('#uploadStatus'), 'Ralat proses: '+err.message, 'bad');
+    showStatus($('#uploadStatus'), 'Ralat proses: ' + err.message, 'bad');
   }
 });
 
 /* ======================= INIT ======================= */
 (async function init(){
-  // Prefill API base dengan URL anda
   $('#apiBase').value = DEFAULT_API_BASE;
-  // Muat panel
   await loadPanels();
   await refreshKnownPanels();
 })();
