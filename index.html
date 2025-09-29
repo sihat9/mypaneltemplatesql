@@ -7,26 +7,28 @@
   <style>
     /* ========= THEME (Light, professional) ========= */
     :root{
-      --bg:#f7fafc; --paper:#ffffff; --ink:#0f172a; --muted:#4b5563;
+      --bg:#f7fafc; --paper:#ffffff; --ink:#0b1220; --muted:#374151;
       --stroke:#e5e7eb; --stroke-strong:#cbd5e1; --brand:#2563eb; --brand-2:#3b82f6;
       --ok:#16a34a; --err:#dc2626; --warn:#f59e0b;
       --chip:#eef2ff; --chip-text:#1e3a8a;
       --soft:#f8fafc; --soft-2:#f1f5f9;
-      --shadow: 0 4px 16px rgba(2, 8, 23, .06);
+      --shadow: 0 6px 22px rgba(2, 8, 23, .06);
     }
-    html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:Inter, ui-sans-serif, system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,"Helvetica Neue",Arial}
+    html,body{
+      margin:0;height:100%;background:var(--bg);color:var(--ink);
+      font-family:Inter, ui-sans-serif, system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,"Helvetica Neue",Arial;
+      font-size:15.5px; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; line-height:1.45;
+    }
     *{box-sizing:border-box}
 
     /* ========= LAYOUT ========= */
     .wrap{max-width:1200px;margin:32px auto;padding:0 18px}
     .topbar{display:flex;gap:16px;align-items:center;margin-bottom:18px}
-    .logo{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#93c5fd,#60a5fa);box-shadow:var(--shadow)}
-    .title{font-weight:800;font-size:22px}
-    .subtitle{color:var(--muted);font-size:14px}
-    .chip{font-size:12px;color:var(--chip-text);background:var(--chip);border:1px solid #e0e7ff;border-radius:999px;padding:4px 10px}
-
-    .tabs{display:flex;gap:10px;margin:8px 0 16px}
-    .tab{padding:10px 16px;border:1px solid var(--stroke);border-radius:10px;background:var(--paper);cursor:pointer;box-shadow:var(--shadow)}
+    .logo{width:42px;height:42px;border-radius:11px;background:linear-gradient(135deg,#93c5fd,#60a5fa);box-shadow:var(--shadow)}
+    .title{font-weight:800;font-size:24px;letter-spacing:.2px}
+    .subtitle{color:var(--muted);font-size:14.5px}
+    .tabs{display:flex;gap:10px;margin:12px 0 16px}
+    .tab{padding:11px 16px;border:1px solid var(--stroke);border-radius:10px;background:var(--paper);cursor:pointer;box-shadow:var(--shadow);font-weight:600}
     .tab.active{border-color:#bfdbfe;background:linear-gradient(180deg,#ffffff,#f8fbff)}
     .card{background:var(--paper);border:1px solid var(--stroke);border-radius:14px;padding:16px;box-shadow:var(--shadow)}
     .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
@@ -34,49 +36,47 @@
 
     /* ========= INPUTS & BUTTONS ========= */
     input[type="text"], input[type="search"], select{
-      background:var(--soft);border:1px solid var(--stroke-strong);border-radius:10px;padding:10px 12px;min-width:220px;
-      outline:none;transition:.2s;
+      background:var(--soft);border:1px solid var(--stroke-strong);border-radius:10px;padding:11px 12px;min-width:220px;
+      outline:none;transition:.2s; font-size:15.5px;
     }
     input[type="text"]:focus, input[type="search"]:focus, select:focus{border-color:#93c5fd;box-shadow:0 0 0 3px rgba(59,130,246,.15)}
-    input[type="checkbox"]{transform:scale(1.05)}
+    input[type="checkbox"]{transform:scale(1.08)}
 
     .btn{
       background:linear-gradient(180deg,var(--brand),var(--brand-2));
-      border:1px solid #1d4ed8;color:white;font-weight:700;padding:10px 14px;border-radius:10px;cursor:pointer
+      border:1px solid #1d4ed8;color:white;font-weight:800;padding:11px 16px;border-radius:10px;cursor:pointer;letter-spacing:.2px
     }
     .btn:disabled{opacity:.6;cursor:not-allowed}
-    .btn2{background:var(--soft);border:1px solid var(--stroke-strong);color:#0f172a;padding:10px 14px;border-radius:10px;cursor:pointer}
-    .btn3{background:#f1f5f9;border:1px solid var(--stroke-strong);color:#0f172a;padding:8px 12px;border-radius:8px;cursor:pointer}
-    .muted{color:var(--muted);font-size:14px}
-    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+    .btn2{background:var(--soft);border:1px solid var(--stroke-strong);color:#0f172a;padding:11px 14px;border-radius:10px;cursor:pointer;font-weight:600}
+    .btn3{background:#f1f5f9;border:1px solid var(--stroke-strong);color:#0f172a;padding:9px 12px;border-radius:8px;cursor:pointer;font-weight:600}
+    .muted{color:var(--muted);font-size:14.5px}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:14.5px}
 
     /* ========= TABLE ========= */
     .table{width:100%;border-collapse:separate;border-spacing:0;background:var(--paper);border:1px solid var(--stroke);border-radius:12px;overflow:hidden}
-    .table th,.table td{padding:10px 12px;border-bottom:1px solid var(--stroke);font-size:14px;vertical-align:middle}
-    .table th{background:#f8fafc;text-align:left;color:#1f2937}
-    .ok{color:var(--ok)} .err{color:var(--err)}
+    .table th,.table td{padding:11px 12px;border-bottom:1px solid var(--stroke);font-size:15px;vertical-align:middle}
+    .table th{background:#f8fafc;text-align:left;color:#111827;font-weight:700}
+    .ok{color:var(--ok);font-weight:700} .err{color:var(--err);font-weight:700}
 
     /* ========= DROPZONE ========= */
-    .drop{border:1.5px dashed #93c5fd;border-radius:14px;background:linear-gradient(180deg,#ffffff,#f8fbff);padding:24px;text-align:center;cursor:pointer}
+    .drop{border:1.5px dashed #93c5fd;border-radius:14px;background:linear-gradient(180deg,#ffffff,#f8fbff);padding:26px;text-align:center;cursor:pointer}
     .drop.drag{background:linear-gradient(180deg,#f0f7ff,#eaf2ff); border-color:#60a5fa}
 
     /* ========= RESULT CARDS ========= */
-    .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+    .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
     .cardItem{background:var(--paper); border:1px solid var(--stroke); border-radius:12px; padding:14px; box-shadow:var(--shadow)}
-    a.dl{display:inline-block;margin-top:8px;background:#eef2ff;border:1px solid #c7d2fe;color:#1e3a8a;text-decoration:none;padding:8px 10px;border-radius:8px}
+    a.dl{display:inline-block;margin-top:8px;background:#eef2ff;border:1px solid #c7d2fe;color:#1e3a8a;text-decoration:none;padding:9px 12px;border-radius:8px;font-weight:700}
 
     /* ========= UPGRADED LOADER ========= */
-    /* Top indeterminate progress bar */
     .progress{position:fixed;left:0;top:0;height:3px;width:100%;background:transparent;z-index:9999;pointer-events:none}
     .progress .bar{position:absolute;height:3px;background:linear-gradient(90deg,#60a5fa,#22c55e,#38bdf8);width:30%;border-radius:3px;animation:flow 1.2s infinite}
     @keyframes flow{0%{left:-30%}50%{left:50%}100%{left:100%}}
-
-    /* Shimmer skeleton row for tables */
-    .skeleton{position:relative;overflow:hidden;background:var(--soft-2);border-radius:8px;height:14px}
+    .skeleton{position:relative;overflow:hidden;background:var(--soft-2);border-radius:8px;height:16px}
     .skeleton::after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,rgba(0,0,0,.06),transparent);animation:shimmer 1.5s infinite}
     @keyframes shimmer{100%{transform:translateX(100%)}}
 
     .hidden{display:none}
+    label.lb{display:block;margin:0 0 6px 2px;color:#0f172a;font-weight:700;font-size:14px}
   </style>
 </head>
 <body>
@@ -87,8 +87,9 @@
       <div class="logo"></div>
       <div class="grow">
         <div class="title">Panel CSV → SQL Template XLSX</div>
-        <div class="subtitle">Pengurusan panel (tambah/edit/padam +  eksport ikut templat)</div>
-      
+        <div class="subtitle">Pengurusan panel (tambah • edit • padam •  eksport ikut templat)</div>
+      </div>
+    </div>
 
     <div class="tabs">
       <button class="tab active" data-tab="tab1">Daftar Panel</button>
@@ -97,13 +98,13 @@
 
     <!-- TAB 1: Panel Register -->
     <section id="tab1" class="card" style="display:block">
-      <div class="row" style="gap:10px;align-items:flex-end">
+      <div class="row" style="gap:12px;align-items:flex-end">
         <div class="grow">
-          <label class="muted">Nama Panel</label>
+          <label class="lb">Nama Panel</label>
           <input type="text" id="panelName" placeholder="cth: AIA HEALTH SERVIS SDN BHD" class="grow"/>
         </div>
         <div>
-          <label class="muted">Kod Panel</label>
+          <label class="lb">Kod Panel</label>
           <input type="text" id="panelCode" placeholder="cth: 300-A0001"/>
         </div>
         <label class="muted" style="display:flex;gap:8px;align-items:center;margin-bottom:2px"><input type="checkbox" id="panelActive" checked/> Aktif</label>
@@ -111,8 +112,8 @@
         <button class="btn2" id="btnRefresh1">Refresh</button>
       </div>
 
-      <div class="row" style="justify-content:space-between;margin:14px 0 8px">
-        <div class="muted">Senarai panel di <span class="mono">Sheet1</span>.</div>
+      <div class="row" style="justify-content:space-between;margin:16px 0 8px">
+        <div class="muted">Senarai panel yang di <span class="mono">disimpan</span>.</div>
         <input type="search" id="searchPanel" placeholder="Cari nama atau kod…"/>
       </div>
 
@@ -121,56 +122,56 @@
           <tr>
             <th style="width:54px">#</th>
             <th>Nama Panel</th>
-            <th style="width:180px">Kod Panel</th>
+            <th style="width:190px">Kod Panel</th>
             <th style="width:90px">Aktif</th>
-            <th style="width:240px">Tindakan</th>
+            <th style="width:260px">Tindakan</th>
           </tr>
         </thead>
         <tbody id="panelTBody">
           <!-- skeleton while loading -->
-          <tr class="skrow"><td><div class="skeleton" style="width:24px"></div></td><td><div class="skeleton"></div></td><td><div class="skeleton" style="width:110px"></div></td><td><div class="skeleton" style="width:50px"></div></td><td><div class="skeleton" style="width:160px"></div></td></tr>
-          <tr class="skrow"><td><div class="skeleton" style="width:24px"></div></td><td><div class="skeleton"></div></td><td><div class="skeleton" style="width:110px"></div></td><td><div class="skeleton" style="width:50px"></div></td><td><div class="skeleton" style="width:160px"></div></td></tr>
+          <tr class="skrow"><td><div class="skeleton" style="width:26px"></div></td><td><div class="skeleton"></div></td><td><div class="skeleton" style="width:120px"></div></td><td><div class="skeleton" style="width:56px"></div></td><td><div class="skeleton" style="width:180px"></div></td></tr>
+          <tr class="skrow"><td><div class="skeleton" style="width:26px"></div></td><td><div class="skeleton"></div></td><td><div class="skeleton" style="width:120px"></div></td><td><div class="skeleton" style="width:56px"></div></td><td><div class="skeleton" style="width:180px"></div></td></tr>
         </tbody>
       </table>
     </section>
 
     <!-- TAB 2: Upload & Export -->
     <section id="tab2" class="card" style="display:none">
-      <div class="row">
+      <div class="row" style="align-items:flex-start">
         <div class="grow">
-          <div class="muted">API</div>
-          <div class="mono" id="apiBaseShow"></div>
+          <div class="muted" style="margin-bottom:6px">Muat naik CSV panel (boleh banyak fail sekali gus)</div>
+          <label class="drop" id="drop">
+            <input id="fileInput" type="file" accept=".csv,text/csv" multiple hidden />
+            <div style="font-size:16px;font-weight:800;margin-bottom:6px">Seret & lepas CSV di sini, atau klik untuk pilih</div>
+            <div class="muted">Namakan fail ringkas (cth <b>AIA.csv</b>). Sistem cuba padankan panel; jika tidak tepat, pilih manual.</div>
+          </label>
         </div>
-        <button class="btn2" id="btnRefreshPanels">Refresh Panels</button>
-        <button class="btn2" id="btnClean">Clean Now</button>
-        <button class="btn" id="btnProcess" disabled>Proses & Eksport XLSX</button>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <button class="btn2" id="btnRefreshPanels">Refresh Panels</button>
+          <button class="btn2" id="btnClean">Clean Now</button>
+          <button class="btn"  id="btnProcess" disabled>Proses & Eksport XLSX</button>
+        </div>
       </div>
 
-      <div id="panelSummary" class="muted" style="margin-top:6px">Memuat panel…</div>
+      <div id="panelSummary" class="muted" style="margin-top:10px">Memuat panel…</div>
 
-      <label class="drop" id="drop">
-        <input id="fileInput" type="file" accept=".csv,text/csv" multiple hidden />
-        <div style="font-size:16px;font-weight:700;margin-bottom:6px">Seret & lepas CSV di sini, atau klik untuk pilih</div>
-        <div class="muted">Namakan fail ringkas (cth <b>AIA.csv</b>). Sistem cuba padankan panel; jika tidak tepat, pilih manual.</div>
-      </label>
-
-      <table class="table" id="fileTable" style="display:none;margin-top:12px">
+      <table class="table" id="fileTable" style="display:none;margin-top:14px">
         <thead>
         <tr>
-          <th style="width:40px">#</th>
+          <th style="width:44px">#</th>
           <th>Fail</th>
-          <th style="min-width:260px">Panel (auto / manual)</th>
-          <th style="width:120px">Status</th>
-          <th style="width:90px"></th>
+          <th style="min-width:280px">Panel (auto / manual)</th>
+          <th style="width:130px">Status</th>
+          <th style="width:96px"></th>
         </tr>
         </thead>
         <tbody id="fileTBody"></tbody>
       </table>
 
-      <div class="card" id="outWrap" style="display:none;margin-top:14px;background:#fbfdff">
+      <div class="card" id="outWrap" style="display:none;margin-top:16px;background:#fbfdff">
         <div class="row">
-          <div class="grow"><b>Hasil Eksport</b></div>
-          <span class="chip" id="exportMeta">Tiada fail</span>
+          <div class="grow" style="font-weight:800">Hasil Eksport</div>
+          <span class="muted" id="exportMeta">Tiada fail</span>
         </div>
         <div class="cards" id="cards"></div>
       </div>
@@ -179,6 +180,7 @@
 
 <script>
 /* ===================== CONFIG ===================== */
+/* Disembunyikan di UI. Pastikan URL ini kekal betul. */
 const API_BASE = "https://script.google.com/macros/s/AKfycbwcoL2BuH__0BmXQfK3C2D_krslAb9FKqn1WBGlYOyI1G_DlULF-kVjTzxKc4AM-YI/exec";
 
 /* ============== Helper: POST tanpa CORS preflight ============== */
@@ -192,7 +194,6 @@ function apiPost(payload){
 }
 const $ = id => document.getElementById(id);
 const els = {
-  apiHost: $('apiHost'), apiBaseShow: $('apiBaseShow'),
   // tabs
   tabBtns: Array.from(document.querySelectorAll('.tab')), tab1: $('tab1'), tab2: $('tab2'),
   // tab1
@@ -256,34 +257,31 @@ function renderPanelTable(fromLoad=false){
     .filter(p => !q || (String(p.PanelName).toLowerCase().includes(q) || String(p.PanelCode).toLowerCase().includes(q)))
     .map((p,i)=> rowPanel(p,i));
   els.panelTBody.innerHTML = '';
-  if (fromLoad && rows.length===0){
-    // Sekiranya kosong, tiada skeleton
-  }
   rows.forEach(tr => els.panelTBody.appendChild(tr));
 }
 function rowPanel(p, idx){
   const tr = document.createElement('tr');
   tr.innerHTML = `
-    <td>${idx+1}</td>
+    <td><strong>${idx+1}</strong></td>
     <td><span class="mono">${escapeHtml(p.PanelName)}</span></td>
     <td><span class="mono">${escapeHtml(p.PanelCode)}</span></td>
     <td>${p.Active!==false?'<span class="ok">Ya</span>':'<span class="err">Tidak</span>'}</td>
     <td>
       <button class="btn3">Edit</button>
-      <button class="btn3" style="margin-left:6px">Padam</button>
+      <button class="btn3" style="margin-left:8px">Padam</button>
     </td>`;
   const btnEdit = tr.children[4].children[0];
   const btnDel  = tr.children[4].children[1];
 
   btnEdit.addEventListener('click', ()=>{
     tr.innerHTML = `
-      <td>${idx+1}</td>
+      <td><strong>${idx+1}</strong></td>
       <td><input type="text" value="${escapeHtml(p.PanelName)}" style="width:100%"/></td>
-      <td><input type="text" value="${escapeHtml(p.PanelCode)}" style="width:160px"/></td>
+      <td><input type="text" value="${escapeHtml(p.PanelCode)}" style="width:180px"/></td>
       <td><label style="display:flex;gap:6px;align-items:center"><input type="checkbox" ${p.Active!==false?'checked':''}/> Aktif</label></td>
       <td>
         <button class="btn3">Simpan</button>
-        <button class="btn3" style="margin-left:6px">Batal</button>
+        <button class="btn3" style="margin-left:8px">Batal</button>
       </td>`;
     const inputName = tr.children[1].querySelector('input');
     const inputCode = tr.children[2].querySelector('input');
@@ -407,8 +405,8 @@ function renderQueue(){
   filesQueue.forEach((it,idx)=>{
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${idx+1}</td>
-      <td><div class="mono">${escapeHtml(it.name)}</div><div class="muted" style="font-size:12px">${it.auto?'auto':'manual'}${it.panelCode?` · ${escapeHtml(it.panelCode)}`:''}</div></td>
+      <td><strong>${idx+1}</strong></td>
+      <td><div class="mono">${escapeHtml(it.name)}</div><div class="muted" style="font-size:13px">${it.auto?'auto':'manual'}${it.panelCode?` · ${escapeHtml(it.panelCode)}`:''}</div></td>
       <td></td>
       <td><span class="${it.status==='OK'?'ok':(it.status==='Ready'?'':'err')}">${escapeHtml(it.status)}</span></td>
       <td><button class="btn3">Buang</button></td>`;
@@ -447,8 +445,8 @@ function renderResults(files){
   files.forEach(f=>{
     const div = document.createElement('div'); div.className='cardItem';
     div.innerHTML = `
-      <div style="font-weight:700">${escapeHtml(f.filename)}</div>
-      <div class="muted" style="font-size:13px;margin-top:4px">
+      <div style="font-weight:800">${escapeHtml(f.filename)}</div>
+      <div class="muted" style="font-size:14px;margin-top:6px">
         Panel: <b>${escapeHtml(f.panelName || f.panelCode)}</b><br/>
         Baris: ${f.rows} · Jumlah (batch): ${Number(f.amountSum||0).toLocaleString('en-MY')}
       </div>
