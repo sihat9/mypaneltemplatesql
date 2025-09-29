@@ -1,141 +1,189 @@
 <!doctype html>
 <html lang="ms">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Panel CSV → SQL Template XLSX</title>
   <style>
+    /* ========= THEME (Light, professional) ========= */
     :root{
-      --bg:#0b1020; --card:#0c1428; --stroke:#0f213b; --text:#e6eefc; --muted:#9fb2d9;
-      --brand:#22c55e; --brand2:#10b981; --err:#ef4444; --ok:#22c55e;
+      --bg:#f7fafc; --paper:#ffffff; --ink:#0f172a; --muted:#4b5563;
+      --stroke:#e5e7eb; --stroke-strong:#cbd5e1; --brand:#2563eb; --brand-2:#3b82f6;
+      --ok:#16a34a; --err:#dc2626; --warn:#f59e0b;
+      --chip:#eef2ff; --chip-text:#1e3a8a;
+      --soft:#f8fafc; --soft-2:#f1f5f9;
+      --shadow: 0 4px 16px rgba(2, 8, 23, .06);
     }
-    html,body{margin:0;height:100%;background:linear-gradient(180deg,var(--bg),#0a0f1a);color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial}
+    html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:Inter, ui-sans-serif, system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,"Helvetica Neue",Arial}
     *{box-sizing:border-box}
-    .wrap{max-width:1120px;margin:32px auto;padding:0 16px}
-    .nav{display:flex;gap:10px;margin-bottom:16px}
-    .tab{padding:10px 14px;border-radius:10px;border:1px solid var(--stroke);background:linear-gradient(180deg,#0b162b,#0b1426);color:#cde2ff;cursor:pointer}
-    .tab.active{background:linear-gradient(180deg,#11244a,#0e213f);border-color:#1f3b6a}
-    .card{background:linear-gradient(180deg,var(--card),#0a1326);border:1px solid var(--stroke);border-radius:14px;padding:16px}
+
+    /* ========= LAYOUT ========= */
+    .wrap{max-width:1200px;margin:32px auto;padding:0 18px}
+    .topbar{display:flex;gap:16px;align-items:center;margin-bottom:18px}
+    .logo{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#93c5fd,#60a5fa);box-shadow:var(--shadow)}
+    .title{font-weight:800;font-size:22px}
+    .subtitle{color:var(--muted);font-size:14px}
+    .chip{font-size:12px;color:var(--chip-text);background:var(--chip);border:1px solid #e0e7ff;border-radius:999px;padding:4px 10px}
+
+    .tabs{display:flex;gap:10px;margin:8px 0 16px}
+    .tab{padding:10px 16px;border:1px solid var(--stroke);border-radius:10px;background:var(--paper);cursor:pointer;box-shadow:var(--shadow)}
+    .tab.active{border-color:#bfdbfe;background:linear-gradient(180deg,#ffffff,#f8fbff)}
+    .card{background:var(--paper);border:1px solid var(--stroke);border-radius:14px;padding:16px;box-shadow:var(--shadow)}
     .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
     .grow{flex:1 1 auto}
-    .btn{background:linear-gradient(180deg,#16a34a,#22c55e);border:1px solid #22c55e;color:#052e16;font-weight:700;padding:10px 14px;border-radius:10px;cursor:pointer}
-    .btn:disabled{opacity:.6;cursor:not-allowed}
-    .btn2{background:#0b162b;border:1px solid #12315d;color:#dbeafe;padding:10px 14px;border-radius:10px;cursor:pointer}
-    .btn3{background:#111827;border:1px solid #1f2937;color:#e5e7eb;padding:8px 12px;border-radius:8px;cursor:pointer}
-    .muted{color:var(--muted);font-size:14px}
-    .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace}
-    input[type="text"], select, input[type="search"]{
-      background:#0b162b;color:#e5e7eb;border:1px solid #12315d;border-radius:10px;padding:10px 12px;min-width:220px
+
+    /* ========= INPUTS & BUTTONS ========= */
+    input[type="text"], input[type="search"], select{
+      background:var(--soft);border:1px solid var(--stroke-strong);border-radius:10px;padding:10px 12px;min-width:220px;
+      outline:none;transition:.2s;
     }
+    input[type="text"]:focus, input[type="search"]:focus, select:focus{border-color:#93c5fd;box-shadow:0 0 0 3px rgba(59,130,246,.15)}
     input[type="checkbox"]{transform:scale(1.05)}
-    .table{width:100%;border-collapse:collapse;background:#0b1222;border:1px solid var(--stroke);border-radius:12px;overflow:hidden}
+
+    .btn{
+      background:linear-gradient(180deg,var(--brand),var(--brand-2));
+      border:1px solid #1d4ed8;color:white;font-weight:700;padding:10px 14px;border-radius:10px;cursor:pointer
+    }
+    .btn:disabled{opacity:.6;cursor:not-allowed}
+    .btn2{background:var(--soft);border:1px solid var(--stroke-strong);color:#0f172a;padding:10px 14px;border-radius:10px;cursor:pointer}
+    .btn3{background:#f1f5f9;border:1px solid var(--stroke-strong);color:#0f172a;padding:8px 12px;border-radius:8px;cursor:pointer}
+    .muted{color:var(--muted);font-size:14px}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+
+    /* ========= TABLE ========= */
+    .table{width:100%;border-collapse:separate;border-spacing:0;background:var(--paper);border:1px solid var(--stroke);border-radius:12px;overflow:hidden}
     .table th,.table td{padding:10px 12px;border-bottom:1px solid var(--stroke);font-size:14px;vertical-align:middle}
-    .table th{background:#0b152a;text-align:left;color:#9fb2d9}
-    .pill{padding:2px 8px;border-radius:999px;font-size:12px;border:1px solid #1e293b;background:#0a1222;color:#93c5fd}
+    .table th{background:#f8fafc;text-align:left;color:#1f2937}
     .ok{color:var(--ok)} .err{color:var(--err)}
-    .drop{border:1.5px dashed #1e3a8a;border-radius:14px;background:linear-gradient(180deg,#09132a,#0a1428);padding:22px;text-align:center;cursor:pointer}
-    .drop.drag{background:linear-gradient(180deg,#0b1a3a,#0a162f); border-color:#2563eb}
-    .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
-    .cardItem{background:linear-gradient(180deg,#0b1222,#0c1428); border:1px solid #0f213b; border-radius:12px; padding:14px}
-    a.dl{display:inline-block;margin-top:8px;background:#0b162b;border:1px solid #12315d;color:#a5f3fc;text-decoration:none;padding:8px 10px;border-radius:8px}
-    .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+
+    /* ========= DROPZONE ========= */
+    .drop{border:1.5px dashed #93c5fd;border-radius:14px;background:linear-gradient(180deg,#ffffff,#f8fbff);padding:24px;text-align:center;cursor:pointer}
+    .drop.drag{background:linear-gradient(180deg,#f0f7ff,#eaf2ff); border-color:#60a5fa}
+
+    /* ========= RESULT CARDS ========= */
+    .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+    .cardItem{background:var(--paper); border:1px solid var(--stroke); border-radius:12px; padding:14px; box-shadow:var(--shadow)}
+    a.dl{display:inline-block;margin-top:8px;background:#eef2ff;border:1px solid #c7d2fe;color:#1e3a8a;text-decoration:none;padding:8px 10px;border-radius:8px}
+
+    /* ========= UPGRADED LOADER ========= */
+    /* Top indeterminate progress bar */
+    .progress{position:fixed;left:0;top:0;height:3px;width:100%;background:transparent;z-index:9999;pointer-events:none}
+    .progress .bar{position:absolute;height:3px;background:linear-gradient(90deg,#60a5fa,#22c55e,#38bdf8);width:30%;border-radius:3px;animation:flow 1.2s infinite}
+    @keyframes flow{0%{left:-30%}50%{left:50%}100%{left:100%}}
+
+    /* Shimmer skeleton row for tables */
+    .skeleton{position:relative;overflow:hidden;background:var(--soft-2);border-radius:8px;height:14px}
+    .skeleton::after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,rgba(0,0,0,.06),transparent);animation:shimmer 1.5s infinite}
+    @keyframes shimmer{100%{transform:translateX(100%)}}
+
+    .hidden{display:none}
   </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="row" style="margin-bottom:10px">
-    <div class="grow">
-      <div style="font-size:22px;font-weight:800;letter-spacing:.3px">Panel CSV → SQL Template XLSX</div>
-      <div class="muted">Muat naik berbilang CSV • Auto-detect panel • Export templat • Pengurusan panel (tambah/edit/padam) termasuk tukar Kod</div>
-    </div>
-    <span class="pill mono" id="apiLabel">API</span>
-  </div>
+  <div class="progress hidden" id="progress"><div class="bar"></div></div>
 
-  <div class="nav">
-    <button class="tab active" data-tab="tab1">Halaman 1 — Panel Register</button>
-    <button class="tab" data-tab="tab2">Halaman 2 — Upload & Export</button>
-  </div>
-
-  <!-- TAB 1: Panel Register -->
-  <section id="tab1" class="card" style="display:block">
-    <div class="toolbar">
-      <input type="text" id="panelName" placeholder="Nama Panel (cth: AIA HEALTH SERVIS SDN BHD)" class="grow"/>
-      <input type="text" id="panelCode" placeholder="Kod Panel (cth: 300-A0001)" />
-      <label class="muted" style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="panelActive" checked/> Aktif</label>
-      <button class="btn" id="btnAdd">Tambah</button>
-      <button class="btn2" id="btnRefresh1">Refresh</button>
-      <span class="muted" id="panelHint">Tambah panel baharu atau edit/padam pada jadual di bawah.</span>
-    </div>
-
-    <div class="row" style="justify-content:space-between;margin:10px 0 6px">
-      <div class="muted">Senarai panel dalam <span class="mono">Sheet1</span>.</div>
-      <input type="search" id="searchPanel" placeholder="Cari nama/kod…" />
-    </div>
-
-    <table class="table" id="panelTable">
-      <thead>
-        <tr>
-          <th style="width:48px">#</th>
-          <th>Nama Panel</th>
-          <th style="width:180px">Kod Panel</th>
-          <th style="width:90px">Aktif</th>
-          <th style="width:220px">Tindakan</th>
-        </tr>
-      </thead>
-      <tbody id="panelTBody"></tbody>
-    </table>
-  </section>
-
-  <!-- TAB 2: Upload & Export -->
-  <section id="tab2" class="card" style="display:none">
-    <div class="row">
+  <div class="wrap">
+    <div class="topbar">
+      <div class="logo"></div>
       <div class="grow">
-        <div class="muted">API Web App</div>
-        <div class="mono" id="apiBaseShow"></div>
+        <div class="title">Panel CSV → SQL Template XLSX</div>
+        <div class="subtitle">Pengurusan panel (tambah/edit/padam + tukar kod), muat naik berbilang CSV, auto-detect panel, eksport ikut templat.</div>
       </div>
-      <button class="btn2" id="btnRefreshPanels">Refresh Panels</button>
-      <button class="btn2" id="btnClean">Clean Now</button>
-      <button class="btn" id="btnProcess" disabled>Proses & Eksport XLSX</button>
+      <span class="chip mono" id="apiHost">api</span>
     </div>
 
-    <div id="panelSummary" class="muted">Memuat panel…</div>
+    <div class="tabs">
+      <button class="tab active" data-tab="tab1">Halaman 1 — Panel Register</button>
+      <button class="tab" data-tab="tab2">Halaman 2 — Upload & Export</button>
+    </div>
 
-    <label class="drop" id="drop">
-      <input id="fileInput" type="file" accept=".csv,text/csv" multiple hidden />
-      <div style="font-size:16px;font-weight:700;margin-bottom:6px">Seret & lepas CSV di sini, atau klik untuk pilih</div>
-      <div class="muted">Namakan fail ringkas (cth <b>AIA.csv</b>). Sistem cuba padankan <i>Panel</i>. Jika tak tepat, pilih manual.</div>
-    </label>
+    <!-- TAB 1: Panel Register -->
+    <section id="tab1" class="card" style="display:block">
+      <div class="row" style="gap:10px;align-items:flex-end">
+        <div class="grow">
+          <label class="muted">Nama Panel</label>
+          <input type="text" id="panelName" placeholder="cth: AIA HEALTH SERVIS SDN BHD" class="grow"/>
+        </div>
+        <div>
+          <label class="muted">Kod Panel</label>
+          <input type="text" id="panelCode" placeholder="cth: 300-A0001"/>
+        </div>
+        <label class="muted" style="display:flex;gap:8px;align-items:center;margin-bottom:2px"><input type="checkbox" id="panelActive" checked/> Aktif</label>
+        <button class="btn" id="btnAdd">Tambah</button>
+        <button class="btn2" id="btnRefresh1">Refresh</button>
+      </div>
 
-    <table class="table" id="fileTable" style="display:none">
-      <thead>
-      <tr>
-        <th style="width:36px">#</th>
-        <th>Fail</th>
-        <th style="min-width:240px">Panel (auto / manual)</th>
-        <th style="width:120px">Status</th>
-        <th style="width:88px"></th>
-      </tr>
-      </thead>
-      <tbody id="fileTBody"></tbody>
-    </table>
+      <div class="row" style="justify-content:space-between;margin:14px 0 8px">
+        <div class="muted">Senarai panel di <span class="mono">Sheet1</span>.</div>
+        <input type="search" id="searchPanel" placeholder="Cari nama atau kod…"/>
+      </div>
 
-    <div class="card" id="outWrap" style="display:none;margin-top:12px">
+      <table class="table" id="panelTable">
+        <thead>
+          <tr>
+            <th style="width:54px">#</th>
+            <th>Nama Panel</th>
+            <th style="width:180px">Kod Panel</th>
+            <th style="width:90px">Aktif</th>
+            <th style="width:240px">Tindakan</th>
+          </tr>
+        </thead>
+        <tbody id="panelTBody">
+          <!-- skeleton while loading -->
+          <tr class="skrow"><td><div class="skeleton" style="width:24px"></div></td><td><div class="skeleton"></div></td><td><div class="skeleton" style="width:110px"></div></td><td><div class="skeleton" style="width:50px"></div></td><td><div class="skeleton" style="width:160px"></div></td></tr>
+          <tr class="skrow"><td><div class="skeleton" style="width:24px"></div></td><td><div class="skeleton"></div></td><td><div class="skeleton" style="width:110px"></div></td><td><div class="skeleton" style="width:50px"></div></td><td><div class="skeleton" style="width:160px"></div></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- TAB 2: Upload & Export -->
+    <section id="tab2" class="card" style="display:none">
       <div class="row">
-        <div class="grow"><b>Hasil Eksport</b></div>
-        <span class="pill" id="exportMeta"></span>
+        <div class="grow">
+          <div class="muted">API</div>
+          <div class="mono" id="apiBaseShow"></div>
+        </div>
+        <button class="btn2" id="btnRefreshPanels">Refresh Panels</button>
+        <button class="btn2" id="btnClean">Clean Now</button>
+        <button class="btn" id="btnProcess" disabled>Proses & Eksport XLSX</button>
       </div>
-      <div class="cards" id="cards"></div>
-    </div>
-  </section>
 
-  <div class="muted" style="margin-top:14px">Pastikan Web App dideploy “Anyone”. Kaedah POST guna <span class="mono">payload=&lt;JSON&gt;</span> (tiada preflight/CORS).</div>
-</div>
+      <div id="panelSummary" class="muted" style="margin-top:6px">Memuat panel…</div>
+
+      <label class="drop" id="drop">
+        <input id="fileInput" type="file" accept=".csv,text/csv" multiple hidden />
+        <div style="font-size:16px;font-weight:700;margin-bottom:6px">Seret & lepas CSV di sini, atau klik untuk pilih</div>
+        <div class="muted">Namakan fail ringkas (cth <b>AIA.csv</b>). Sistem cuba padankan panel; jika tidak tepat, pilih manual.</div>
+      </label>
+
+      <table class="table" id="fileTable" style="display:none;margin-top:12px">
+        <thead>
+        <tr>
+          <th style="width:40px">#</th>
+          <th>Fail</th>
+          <th style="min-width:260px">Panel (auto / manual)</th>
+          <th style="width:120px">Status</th>
+          <th style="width:90px"></th>
+        </tr>
+        </thead>
+        <tbody id="fileTBody"></tbody>
+      </table>
+
+      <div class="card" id="outWrap" style="display:none;margin-top:14px;background:#fbfdff">
+        <div class="row">
+          <div class="grow"><b>Hasil Eksport</b></div>
+          <span class="chip" id="exportMeta">Tiada fail</span>
+        </div>
+        <div class="cards" id="cards"></div>
+      </div>
+    </section>
+  </div>
 
 <script>
 /* ===================== CONFIG ===================== */
 const API_BASE = "https://script.google.com/macros/s/AKfycbwcoL2BuH__0BmXQfK3C2D_krslAb9FKqn1WBGlYOyI1G_DlULF-kVjTzxKc4AM-YI/exec";
 
-/* ============== Helper: simple POST (no CORS preflight) ============== */
+/* ============== Helper: POST tanpa CORS preflight ============== */
 function apiPost(payload){
   const body = new URLSearchParams({ payload: JSON.stringify(payload) });
   return fetch(API_BASE, {
@@ -144,80 +192,77 @@ function apiPost(payload){
     body
   }).then(r=>r.json());
 }
-function escapeHtml(s){return String(s).replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m]))}
-function byId(id){return document.getElementById(id)}
-function setBusy(b){[els.btnAdd,els.btnRefresh1,els.btnProcess,els.btnRefreshPanels,els.btnClean].forEach(x=>x&&(x.disabled=b));}
-
-/* ===================== Elements ===================== */
+const $ = id => document.getElementById(id);
 const els = {
-  apiLabel: byId('apiLabel'),
-  apiBaseShow: byId('apiBaseShow'),
-  // nav
-  tabBtns: Array.from(document.querySelectorAll('.tab')),
-  tab1: byId('tab1'),
-  tab2: byId('tab2'),
+  apiHost: $('apiHost'), apiBaseShow: $('apiBaseShow'),
+  // tabs
+  tabBtns: Array.from(document.querySelectorAll('.tab')), tab1: $('tab1'), tab2: $('tab2'),
   // tab1
-  panelName: byId('panelName'),
-  panelCode: byId('panelCode'),
-  panelActive: byId('panelActive'),
-  btnAdd: byId('btnAdd'),
-  btnRefresh1: byId('btnRefresh1'),
-  panelTBody: byId('panelTBody'),
-  searchPanel: byId('searchPanel'),
+  panelName: $('panelName'), panelCode: $('panelCode'), panelActive: $('panelActive'),
+  btnAdd: $('btnAdd'), btnRefresh1: $('btnRefresh1'), panelTBody: $('panelTBody'), searchPanel: $('searchPanel'),
   // tab2
-  panelSummary: byId('panelSummary'),
-  drop: byId('drop'),
-  fileInput: byId('fileInput'),
-  fileTable: byId('fileTable'),
-  fileTBody: byId('fileTBody'),
-  btnProcess: byId('btnProcess'),
-  btnRefreshPanels: byId('btnRefreshPanels'),
-  btnClean: byId('btnClean'),
-  outWrap: byId('outWrap'),
-  exportMeta: byId('exportMeta'),
-  cards: byId('cards')
+  panelSummary: $('panelSummary'), drop: $('drop'), fileInput: $('fileInput'), fileTable: $('fileTable'),
+  fileTBody: $('fileTBody'), btnProcess: $('btnProcess'), btnRefreshPanels: $('btnRefreshPanels'),
+  btnClean: $('btnClean'), outWrap: $('outWrap'), exportMeta: $('exportMeta'), cards: $('cards'),
+  // loader
+  progress: $('progress')
 };
-els.apiLabel.textContent = 'API: ' + (new URL(API_BASE)).host;
-els.apiBaseShow.textContent = API_BASE;
+els.apiHost.textContent = (new URL(API_BASE)).host;
+$('apiBaseShow').textContent = API_BASE;
+
+/* ===================== LOADER ===================== */
+let loadingCount = 0;
+function showLoader(){ loadingCount++; els.progress.classList.remove('hidden'); }
+function hideLoader(){ loadingCount = Math.max(0, loadingCount-1); if(loadingCount===0) els.progress.classList.add('hidden'); }
+function setBusy(b){
+  [els.btnAdd,els.btnRefresh1,els.btnProcess,els.btnRefreshPanels,els.btnClean].forEach(x=>x&&(x.disabled=b));
+  if(b) showLoader(); else hideLoader();
+}
 
 /* ===================== NAV ===================== */
 els.tabBtns.forEach(btn=>{
   btn.addEventListener('click', ()=>{
     els.tabBtns.forEach(x=>x.classList.remove('active'));
     btn.classList.add('active');
-    const id = btn.getAttribute('data-tab');
-    els.tab1.style.display = (id==='tab1')?'block':'none';
-    els.tab2.style.display = (id==='tab2')?'block':'none';
+    const id=btn.dataset.tab;
+    els.tab1.style.display = id==='tab1' ? 'block' : 'none';
+    els.tab2.style.display = id==='tab2' ? 'block' : 'none';
   });
 });
 
 /* ===================== DATA (Panels) ===================== */
-let PANELS = [];         // {PanelName, PanelCode, Active}
+let PANELS = []; // {PanelName, PanelCode, Active}
 let PANEL_OPTIONS_HTML = '';
 
 async function loadPanels(){
-  const res = await apiPost({action:'listPanels'});
-  if(!res || !res.ok){ console.error(res); return; }
-  PANELS = (res.panels||[]).filter(p=>p.PanelName); // semua, biar toggle aktif ikut nilai
-  buildPanelOptions();
-  renderPanelTable();
-  // tab2 summary (kira aktif)
-  const activeCount = PANELS.filter(p=>p.Active!==false).length;
-  els.panelSummary.textContent = `Jumlah panel aktif: ${activeCount}`;
+  showLoader();
+  try{
+    const res = await apiPost({action:'listPanels'});
+    if(!res || !res.ok){ console.error(res); return; }
+    PANELS = (res.panels||[]).filter(p=>p.PanelName);
+    buildPanelOptions();
+    renderPanelTable(true);
+    const activeCount = PANELS.filter(p=>p.Active!==false).length;
+    els.panelSummary.textContent = `Jumlah panel aktif: ${activeCount}`;
+  } finally { hideLoader(); }
 }
 function buildPanelOptions(){
   const actives = PANELS.filter(p=>p.Active!==false);
   PANEL_OPTIONS_HTML = `<option value="">— pilih panel —</option>` +
     actives.map(p => `<option value="${escapeHtml(p.PanelCode)}">${escapeHtml(p.PanelName)} — ${escapeHtml(p.PanelCode)}</option>`).join('');
 }
+function escapeHtml(s){return String(s).replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m]))}
 
-/* ===================== TAB 1 – CRUD Panel ===================== */
-function renderPanelTable(){
+/* ===================== TAB 1 – CRUD Panel (termasuk tukar kod) ===================== */
+function renderPanelTable(fromLoad=false){
   const q = els.searchPanel.value.trim().toLowerCase();
   const rows = PANELS
     .filter(p => !q || (String(p.PanelName).toLowerCase().includes(q) || String(p.PanelCode).toLowerCase().includes(q)))
     .map((p,i)=> rowPanel(p,i));
   els.panelTBody.innerHTML = '';
+  if (fromLoad && rows.length===0){
+    // Sekiranya kosong, tiada skeleton
+  }
   rows.forEach(tr => els.panelTBody.appendChild(tr));
 }
 function rowPanel(p, idx){
@@ -235,7 +280,6 @@ function rowPanel(p, idx){
   const btnDel  = tr.children[4].children[1];
 
   btnEdit.addEventListener('click', ()=>{
-    // editable row — boleh ubah Nama, Kod, Aktif
     tr.innerHTML = `
       <td>${idx+1}</td>
       <td><input type="text" value="${escapeHtml(p.PanelName)}" style="width:100%"/></td>
@@ -258,23 +302,18 @@ function rowPanel(p, idx){
       setBusy(true);
       try{
         if (newCode !== p.PanelCode) {
-          // 1) tukar kod (aksi baru di backend)
           const r1 = await apiPost({action:'renamePanelCode', oldCode:p.PanelCode, newCode:newCode});
           if(!r1 || !r1.ok){ throw new Error(r1 && r1.error || 'Gagal tukar kod'); }
-          // 2) kemaskini nama/aktif (guna kod baharu)
           const r2 = await apiPost({action:'updatePanel', panelCode:newCode, newName:newName, active:chkActive.checked});
           if(!r2 || !r2.ok){ throw new Error(r2 && r2.error || 'Gagal kemaskini panel'); }
         } else {
-          // kod tak berubah → hanya update nama/aktif
           const r = await apiPost({action:'updatePanel', panelCode:p.PanelCode, newName:newName, active:chkActive.checked});
           if(!r || !r.ok){ throw new Error(r && r.error || 'Gagal kemaskini panel'); }
         }
         await refreshPanelsBoth();
       }catch(e){
         alert(String(e.message||e));
-      }finally{
-        setBusy(false);
-      }
+      }finally{ setBusy(false); }
     });
     bCancel.addEventListener('click', renderPanelTable);
   });
@@ -307,14 +346,17 @@ els.btnRefresh1.addEventListener('click', refreshPanelsBoth);
 els.searchPanel.addEventListener('input', renderPanelTable);
 
 async function refreshPanelsBoth(){
-  const res = await apiPost({action:'listPanels'});
-  if(res && res.ok){
-    PANELS = (res.panels||[]).filter(p=>p.PanelName);
-    buildPanelOptions();
-    renderPanelTable();
-    const activeCount = PANELS.filter(p=>p.Active!==false).length;
-    els.panelSummary.textContent = `Jumlah panel aktif: ${activeCount}`;
-  }
+  showLoader();
+  try{
+    const res = await apiPost({action:'listPanels'});
+    if(res && res.ok){
+      PANELS = (res.panels||[]).filter(p=>p.PanelName);
+      buildPanelOptions();
+      renderPanelTable();
+      const activeCount = PANELS.filter(p=>p.Active!==false).length;
+      els.panelSummary.textContent = `Jumlah panel aktif: ${activeCount}`;
+    }
+  } finally { hideLoader(); }
 }
 
 /* ===================== TAB 2 – Upload & Export ===================== */
@@ -372,7 +414,7 @@ function renderQueue(){
       <td>${idx+1}</td>
       <td><div class="mono">${escapeHtml(it.name)}</div><div class="muted" style="font-size:12px">${it.auto?'auto':'manual'}${it.panelCode?` · ${escapeHtml(it.panelCode)}`:''}</div></td>
       <td></td>
-      <td><span class="${it.status==='OK'?'ok':(it.status==='Ready'?'muted':'err')}">${escapeHtml(it.status)}</span></td>
+      <td><span class="${it.status==='OK'?'ok':(it.status==='Ready'?'':'err')}">${escapeHtml(it.status)}</span></td>
       <td><button class="btn3">Buang</button></td>`;
     const tdSel = tr.children[2];
     const sel = document.createElement('select');
@@ -390,9 +432,12 @@ async function processAll(){
   const missing = filesQueue.filter(x=>!x.panelCode);
   if(missing.length){ alert('Sila pilih Panel untuk semua fail.'); return; }
   setBusy(true);
-  const payload = { action:'processCsvFiles', files: filesQueue.map(x=>({name:x.name, content:x.text, panelCode:x.panelCode})) };
   let res;
-  try{ res = await apiPost(payload); }catch(e){ setBusy(false); alert('Ralat rangkaian/API.'); return; }
+  try{
+    res = await apiPost({ action:'processCsvFiles', files: filesQueue.map(x=>({name:x.name, content:x.text, panelCode:x.panelCode})) });
+  }catch(e){
+    setBusy(false); alert('Ralat rangkaian/API.'); return;
+  }
   setBusy(false);
   if(!res || !res.ok){ console.error(res); alert('Proses gagal: ' + (res && res.error || 'Unknown')); return; }
   (res.files||[]).forEach(f=>{ filesQueue.forEach(q=>{ if(q.panelCode===f.panelCode) q.status='OK'; }); });
@@ -420,15 +465,15 @@ function renderResults(files){
 async function cleanNow(){
   if(!confirm('Padam SEMUA eksport (.xlsx) dalam folder eksport? (Ke Trash)')) return;
   setBusy(true);
-  let res; try{
-    res = await apiPost({action:'cleanupExportsNow', includeRoot:true});
-  }catch(e){ setBusy(false); alert('Ralat rangkaian/API.'); return; }
+  let res;
+  try{ res = await apiPost({action:'cleanupExportsNow', includeRoot:true}); }
+  catch(e){ setBusy(false); alert('Ralat rangkaian/API.'); return; }
   setBusy(false);
   alert('Cleanup siap. Dipadam: ' + (res && res.deleted || 0));
 }
 
 /* ===================== Events & Init ===================== */
-// Tab
+// Tabs
 document.querySelectorAll('.tab').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
@@ -439,7 +484,7 @@ document.querySelectorAll('.tab').forEach(btn=>{
   });
 });
 
-// Tab1 CRUD
+// Panel CRUD
 els.btnAdd.addEventListener('click', async ()=>{
   const name = els.panelName.value.trim();
   const code = els.panelCode.value.trim();
@@ -455,12 +500,12 @@ els.btnAdd.addEventListener('click', async ()=>{
 els.btnRefresh1.addEventListener('click', refreshPanelsBoth);
 els.searchPanel.addEventListener('input', renderPanelTable);
 
-// Tab2 actions
+// Upload
 els.btnRefreshPanels.addEventListener('click', refreshPanelsBoth);
 els.btnProcess.addEventListener('click', processAll);
 els.btnClean.addEventListener('click', cleanNow);
 
-// Upload widgets
+// Dropzone
 els.drop.addEventListener('click', ()=> els.fileInput.click());
 els.fileInput.addEventListener('change', e=> addFiles(e.target.files));
 ['dragenter','dragover'].forEach(ev=> els.drop.addEventListener(ev, e=>{e.preventDefault(); e.stopPropagation(); els.drop.classList.add('drag');}));
