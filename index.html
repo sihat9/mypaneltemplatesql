@@ -109,12 +109,12 @@
       <div>
         <label>Muat naik fail CSV (boleh banyak sekaligus)</label>
         <input id="csvFiles" type="file" accept=".csv,text/csv" multiple />
-        <p class="hint">Sistem akan cuba **autokesan panel** berdasarkan **nama fail** yang mengandungi Kod Panel. Jika tak pasti, pilih panel secara manual di jadual.</p>
+        <p class="hint">Sistem akan cuba <b>autokesan panel</b> berdasarkan <b>nama fail</b> yang mengandungi Kod Panel. Jika tak pasti, pilih panel secara manual di jadual.</p>
       </div>
       <div>
         <label>API Web App</label>
         <input id="apiBase" placeholder="https://script.google.com/macros/s/XXX/exec" />
-        <p class="hint">Pastikan ini URL Web App Apps Script anda (<span class="mono">/exec</span>).</p>
+        <p class="hint">URL Web App Apps Script (akhiran <span class="mono">/exec</span>). Anda boleh biarkan nilai lalai diisi.</p>
       </div>
     </div>
 
@@ -152,21 +152,19 @@
 
 <script>
 /* ======================= KONFIGURASI ======================= */
-// Gantikan dengan URL Web App Apps Script anda (akhiran /exec).
+// URL Web App Apps Script anda (akhiran /exec) — telah diisi dengan URL yang anda beri.
 const DEFAULT_API_BASE = 'https://script.google.com/macros/s/AKfycbwcoL2BuH__0BmXQfK3C2D_krslAb9FKqn1WBGlYOyI1G_DlULF-kVjTzxKc4AM-YI/exec';
 
 /* ======================= UTIL RINGKAS ======================= */
 const $ = sel => document.querySelector(sel);
 const $$ = sel => Array.from(document.querySelectorAll(sel));
 const formatRM = n => isNaN(n) ? '-' : new Intl.NumberFormat('ms-MY',{style:'currency',currency:'MYR'}).format(n);
-const sleep = ms => new Promise(r=>setTimeout(r,ms));
 
 function showStatus(el, text, type='good'){
   el.textContent = text;
   el.className = 'status ' + (type==='good'?'good':(type==='bad'?'bad':'')); 
   el.hidden = false;
 }
-
 function hideStatus(el){ el.hidden = true; }
 
 /* ======================= NAV TAB ======================= */
@@ -180,19 +178,19 @@ $$('.tab-btn').forEach(btn=>{
   });
 });
 
-/* ======================= API FETCH ======================= */
+/* ======================= API FETCH (CORS-friendly) ======================= */
 function apiBase(){
   const v = $('#apiBase').value.trim();
   return v || DEFAULT_API_BASE;
 }
 
+/** GUNA form-encoded supaya elak preflight CORS */
 async function apiPost(payload){
   const res = await fetch(apiBase(), {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify(payload),
+    method: 'POST',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'},
+    body: 'payload=' + encodeURIComponent(JSON.stringify(payload)),
   });
-  // Apps Script WebApp biasanya benarkan CORS; jika tidak, perlu laras deploy.
   if(!res.ok){
     const t = await res.text();
     throw new Error(`HTTP ${res.status}: ${t}`);
@@ -285,7 +283,6 @@ async function refreshKnownPanels(){
     const out = await apiPost({action:'listPanels'});
     knownPanels = (out.panels||[]).filter(p=>p.Active!==false);
   }catch(e){
-    // fallback kosong
     knownPanels = [];
   }
 }
@@ -314,7 +311,6 @@ async function readFileAsText(file){
 }
 
 function parseCsvQuickStats(text){
-  // Anggaran klien: cari lajur “Total Payment Panel (RM)” dan kira jumlah & bilangan baris (bukan authoritative)
   try{
     const rows = text.split(/\r?\n/).map(r=>r.split(','));
     if(rows.length<2) return null;
@@ -368,7 +364,6 @@ function renderFileTable(){
     `;
     tb.appendChild(tr);
   }
-  // wire selects + remove
   $$('#fileTable tbody tr').forEach((tr, idx)=>{
     const sel = tr.querySelector('.panel-select');
     sel.addEventListener('change', e=>{
@@ -384,7 +379,7 @@ function renderFileTable(){
 
 $('#btnScanFiles').addEventListener('click', async ()=>{
   const files = Array.from($('#csvFiles').files||[]);
-  if(!files.length){ showStatus($('#uploadStatus'),'Sila pilih fail CSV dahulu.','bad'); return; }
+  if(!files.length){ showStatus($('#uploadStatus'],'Sila pilih fail CSV dahulu.','bad'); return; }
   await refreshKnownPanels();
   pendingFiles = [];
   showStatus($('#uploadStatus'),'Mengimbas fail…','good');
@@ -409,7 +404,6 @@ async function toBase64(file){
 $('#btnProcess').addEventListener('click', async ()=>{
   if(!pendingFiles.length){ showStatus($('#uploadStatus'),'Tiada fail untuk diproses.','bad'); return; }
   await refreshKnownPanels();
-  // Pastikan semua fail ada panelCode (sama ada infer nama fail atau pilihan manual)
   for(const it of pendingFiles){
     it.panelCode = it.panelCode || inferPanelFromName(it.name);
     if(!it.panelCode){
@@ -417,10 +411,9 @@ $('#btnProcess').addEventListener('click', async ()=>{
       return;
     }
   }
-  showStatus($('#uploadStatus'),'Memuat naik & memproses di server… ini boleh ambil sedikit masa.','good');
+  showStatus($('#uploadStatus'),'Memuat naik & memproses di server…','good');
 
   try{
-    // Sediakan payload
     const filesPayload = [];
     for(const it of pendingFiles){
       const b64 = await toBase64(it.file);
@@ -429,7 +422,6 @@ $('#btnProcess').addEventListener('click', async ()=>{
     const res = await apiPost({action:'processCsvFiles', files: filesPayload});
     hideStatus($('#uploadStatus'));
     const out = res.files || [];
-    // Paparkan hasil
     const tb = $('#resultTable tbody'); tb.innerHTML='';
     if(!out.length){
       $('#resultsCard').hidden = false;
@@ -455,7 +447,7 @@ $('#btnProcess').addEventListener('click', async ()=>{
 
 /* ======================= INIT ======================= */
 (async function init(){
-  // Prefill API base
+  // Prefill API base dengan URL anda
   $('#apiBase').value = DEFAULT_API_BASE;
   // Muat panel
   await loadPanels();
