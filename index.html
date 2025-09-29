@@ -2,389 +2,465 @@
 <html lang="ms">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>CSV → Google Sheets → Excel/Template</title>
-  <meta name="color-scheme" content="light dark">
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Panel CSV → XLSX Export</title>
   <style>
-    :root {
-      --radius: 12px;
-      --gap: 14px;
-      --border: #e5e7eb;
-      --text: #111827;
-      --muted: #6b7280;
-      --ok: #0a7b2d;
-      --err: #b30000;
+    :root{
+      --bg:#0f172a; --card:#111827; --muted:#1f2937; --text:#e5e7eb;
+      --accent:#22c55e; --accent2:#60a5fa; --danger:#ef4444; --warn:#f59e0b;
+      --border:#374151;
     }
-    * { box-sizing: border-box; }
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; 
-           margin: 24px auto; max-width: 1000px; padding: 0 16px; color: var(--text); }
-    h1 { font-size: 1.6rem; margin: 0 0 8px; }
-    p.lead { margin-top: 0; color: var(--muted); }
-    .grid { display: grid; gap: var(--gap); }
-    .grid.cols-2 { grid-template-columns: 1fr 1fr; }
-    .grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
-    @media (max-width: 860px){ .grid.cols-2, .grid.cols-3 { grid-template-columns: 1fr; } }
-
-    .card { border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; 
-            box-shadow: 0 3px 16px rgba(0,0,0,.05); background: white; }
-    label { font-weight: 600; font-size: 0.95rem; }
-    input[type="text"], input[type="url"], input[type="number"], select {
-      width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 10px; 
-      background: #fff;
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial;
+         background:var(--bg);color:var(--text)}
+    header{padding:16px 20px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(15,23,42,.85);backdrop-filter: blur(8px);}
+    .brand{display:flex;gap:10px;align-items:center}
+    .brand h1{font-size:18px;margin:0}
+    .wrap{max-width:1100px;margin:24px auto;padding:0 16px}
+    .tabs{display:flex;gap:10px;flex-wrap:wrap}
+    .tab-btn{padding:10px 14px;border:1px solid var(--border);border-radius:10px;background:var(--card);color:var(--text);cursor:pointer}
+    .tab-btn.active{outline:2px solid var(--accent);background:#0b1220}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-top:16px}
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    .col{flex:1 1 260px}
+    label{display:block;font-size:13px;margin:6px 0}
+    input,select,button,textarea{
+      width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:#0b1220;color:var(--text)
     }
-    .muted { color: var(--muted); font-size: 0.92rem; }
-    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; 
-           border-radius: 10px; border: 1px solid #111827; background: #111827; color: #fff;
-           cursor: pointer; user-select: none; }
-    .btn.secondary { background: #fff; color: #111827; }
-    .btn:disabled { opacity: .5; cursor: not-allowed; }
-    .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-    .row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap); }
-    @media (max-width: 720px){ .row { grid-template-columns: 1fr; } }
-
-    .drop { border: 2px dashed #9ca3af; border-radius: var(--radius); padding: 20px; text-align: center; }
-    .drop.drag { border-color: #111827; background: #f9fafb; }
-
-    table { width: 100%; border-collapse: collapse; font-size: 14px; }
-    th, td { border: 1px solid #e5e7eb; padding: 6px 8px; text-align: left; }
-    th { background: #f8fafc; }
-
-    .status { margin-left: 6px; }
-    .ok { color: var(--ok); }
-    .err { color: var(--err); }
-
-    .hint { font-size: .88rem; color: var(--muted); }
-    code { background: #f3f4f6; padding: 2px 6px; border-radius: 6px; }
+    input[readonly]{opacity:.8}
+    button{cursor:pointer}
+    .btn{background:var(--muted)}
+    .btn-primary{background:var(--accent);color:#04110a;border-color:#0c3}
+    .btn-info{background:var(--accent2);border-color:#3b82f6}
+    .btn-danger{background:var(--danger);border-color:#b91c1c}
+    .btn-warn{background:var(--warn);border-color:#b45309}
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{border-bottom:1px solid var(--border);padding:10px;text-align:left;font-size:14px;vertical-align:top}
+    th{background:#0b1220}
+    .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;border:1px solid var(--border);background:#0b1220}
+    .flex{display:flex;gap:8px;align-items:center}
+    .right{margin-left:auto}
+    .hint{font-size:12px;opacity:.85}
+    .status{padding:10px;border-radius:10px;margin:10px 0;background:#0b1220;border:1px solid var(--border)}
+    .good{border-color:#14532d;background:#052e1a}
+    .bad{border-color:#7f1d1d;background:#2a0b0b}
+    .grid{display:grid;grid-template-columns:repeat(1,minmax(0,1fr));gap:12px}
+    @media(min-width:720px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+    .small{font-size:12px}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
+    a.button-link{display:inline-block;padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:#0b1220;color:var(--text);text-decoration:none}
+    .kbd{font-family:monospace;background:#111827;border:1px solid #374151;border-radius:6px;padding:2px 6px}
   </style>
 </head>
 <body>
-  <header>
-    <h1>CSV → Google Sheets → Excel / Template</h1>
-    <p class="lead">Muat naik CSV ke Google Sheet, kemudian muat turun semula sebagai Excel biasa — atau terus isi ke <em>Template</em> Google Sheet anda.</p>
-  </header>
+<header>
+  <div class="brand">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="#22c55e" aria-hidden="true"><path d="M12 2a10 10 0 1 0 .001 20.001A10 10 0 0 0 12 2Zm1 5v5l4 2-.75 1.85-5.25-2.6V7h2Z"/></svg>
+    <h1>Panel CSV → XLSX Export</h1>
+    <div class="right hint">GitHub Pages UI • Apps Script API</div>
+  </div>
+</header>
 
-  <section class="card">
-    <div class="grid cols-2">
-      <div>
-        <label for="sheetId">Spreadsheet ID (Sumber/Target)</label>
-        <input id="sheetId" type="text" placeholder="1AbCdEfGhIj..." />
-        <div class="hint">Contoh URL: https://docs.google.com/spreadsheets/d/<strong>SPREADSHEET_ID</strong>/edit</div>
-      </div>
-      <div>
-        <label for="sheetName">Nama Sheet (tab)</label>
-        <input id="sheetName" type="text" placeholder="Sheet1" value="Sheet1" />
-      </div>
-    </div>
+<div class="wrap">
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="panel">Halaman 1 — Pengurusan Panel</button>
+    <button class="tab-btn" data-tab="upload">Halaman 2 — Upload CSV & Eksport</button>
+  </div>
 
-    <div style="height:10px"></div>
-
-    <div id="drop" class="drop">
-      <strong>Seret & lepas</strong> fail <code>.csv</code> ke sini, atau 
-      <label class="btn secondary">Pilih Fail
-        <input id="file" type="file" accept=".csv,text/csv" style="display:none" />
-      </label>
-      <div class="muted">Pastikan encoding <strong>UTF-8</strong>. Pratonton 10 baris pertama akan dipaparkan.</div>
-    </div>
-
-    <div style="height:12px"></div>
-
+  <!-- PANEL MANAGEMENT -->
+  <section id="tab-panel" class="card">
+    <h2>Senarai Panel</h2>
     <div class="row">
-      <div>
-        <label>Mode Import</label>
-        <div class="actions">
-          <label><input type="radio" name="mode" value="replace" checked> Replace (gantikan kepingan)</label>
-          <label><input type="radio" name="mode" value="append"> Append (tambah ke bawah)</label>
-        </div>
+      <div class="col">
+        <label>Nama Panel</label>
+        <input id="panelName" placeholder="cth: AIA HEALTH SERVIS SDN BHD" />
       </div>
-      <div>
-        <label><input id="clearSheet" type="checkbox" checked> Kosongkan sheet sebelum tulis (disaran untuk Replace)</label>
+      <div class="col">
+        <label>Kod Panel</label>
+        <input id="panelCode" placeholder="cth: 300-A0001 atau AIA" />
+      </div>
+      <div class="col" style="max-width:180px">
+        <label>&nbsp;</label>
+        <button class="btn btn-primary" id="btnAddPanel">Simpan / Tambah</button>
       </div>
     </div>
 
-    <div style="height:12px"></div>
+    <div class="status" id="panelStatus" hidden></div>
 
-    <div class="actions">
-      <button id="btnImport" class="btn" disabled>Import CSV → Sheet</button>
-      <button id="btnExportXlsx" class="btn secondary">Download Excel (Keseluruhan)</button>
-      <span id="status" class="status muted">Tiada fail.</span>
+    <div class="flex" style="margin-top:8px">
+      <button class="btn btn-info" id="btnRefreshPanels">Muat Semula</button>
+      <button class="btn" id="btnImportOnce" title="Import sekali dari helaian LIST PANEL ke Sheet1">Import daripada LIST PANEL (sekali)</button>
+      <span class="right hint">Tip: Guna <span class="kbd">Ctrl/⌘+F</span> untuk cari pantas.</span>
     </div>
+
+    <table id="panelTable">
+      <thead>
+        <tr><th>#</th><th>PanelCode</th><th>PanelName</th><th>Status</th><th>Tindakan</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
   </section>
 
-  <div style="height:18px"></div>
+  <!-- UPLOAD & EXPORT -->
+  <section id="tab-upload" class="card" hidden>
+    <h2>Upload CSV → Eksport .xlsx (ikut Templat)</h2>
 
-  <section id="previewWrap" class="card" style="display:none">
-    <h3>Pratonton CSV (10 baris pertama)</h3>
-    <div class="muted" id="filename"></div>
-    <div style="overflow:auto">
-      <table id="preview"></table>
+    <div class="grid">
+      <div>
+        <label>Muat naik fail CSV (boleh banyak sekaligus)</label>
+        <input id="csvFiles" type="file" accept=".csv,text/csv" multiple />
+        <p class="hint">Sistem akan cuba **autokesan panel** berdasarkan **nama fail** yang mengandungi Kod Panel. Jika tak pasti, pilih panel secara manual di jadual.</p>
+      </div>
+      <div>
+        <label>API Web App</label>
+        <input id="apiBase" placeholder="https://script.google.com/macros/s/XXX/exec" />
+        <p class="hint">Pastikan ini URL Web App Apps Script anda (<span class="mono">/exec</span>).</p>
+      </div>
+    </div>
+
+    <div class="status" id="uploadStatus" hidden></div>
+
+    <div class="flex" style="margin-top:10px;">
+      <button class="btn btn-info" id="btnScanFiles">Imbas Fail</button>
+      <button class="btn btn-primary" id="btnProcess">Proses & Eksport .xlsx</button>
+      <span class="right hint">Had: <b>50–100</b> baris setiap fail, jumlah ≤ <b>RM50,000</b> setiap fail (akan dipecah automatik di server).</span>
+    </div>
+
+    <table id="fileTable">
+      <thead>
+        <tr>
+          <th>Fail</th>
+          <th>Panel</th>
+          <th>Ringkasan (anggaran klien)</th>
+          <th>Tindakan</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <div class="card" id="resultsCard" hidden>
+      <h3>Hasil Eksport</h3>
+      <table id="resultTable">
+        <thead>
+          <tr><th>Panel</th><th>Nama Fail</th><th>Baris</th><th>Jumlah (RM)</th><th>Muat Turun</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
     </div>
   </section>
+</div>
 
-  <div style="height:18px"></div>
+<script>
+/* ======================= KONFIGURASI ======================= */
+// Gantikan dengan URL Web App Apps Script anda (akhiran /exec).
+const DEFAULT_API_BASE = 'https://script.google.com/macros/s/AKfycbwcoL2BuH__0BmXQfK3C2D_krslAb9FKqn1WBGlYOyI1G_DlULF-kVjTzxKc4AM-YI/exec';
 
-  <section class="card">
-    <h3>Eksport Ikut Template (Header Matching)</h3>
-    <div class="grid cols-3">
-      <div>
-        <label for="templateId">Template Spreadsheet ID (Google Sheet)</label>
-        <input id="templateId" type="text" placeholder="1ZyXwV..." />
-        <div class="hint">Template perlu dalam format <strong>Google Spreadsheet</strong> (bukan .xlsx).</div>
-      </div>
-      <div>
-        <label for="templateSheetName">Nama Sheet (Template)</label>
-        <input id="templateSheetName" type="text" placeholder="(Kosong = guna sheet aktif)" />
-      </div>
-      <div>
-        <label for="filenameOut">Nama Fail .xlsx</label>
-        <input id="filenameOut" type="text" placeholder="SQL TEMPLATE (Diisi)" value="SQL TEMPLATE (Diisi)" />
-      </div>
-    </div>
+/* ======================= UTIL RINGKAS ======================= */
+const $ = sel => document.querySelector(sel);
+const $$ = sel => Array.from(document.querySelectorAll(sel));
+const formatRM = n => isNaN(n) ? '-' : new Intl.NumberFormat('ms-MY',{style:'currency',currency:'MYR'}).format(n);
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
 
-    <div style="height:10px"></div>
+function showStatus(el, text, type='good'){
+  el.textContent = text;
+  el.className = 'status ' + (type==='good'?'good':(type==='bad'?'bad':'')); 
+  el.hidden = false;
+}
 
-    <div class="grid cols-3">
-      <div>
-        <label for="headerRow">Baris Header</label>
-        <input id="headerRow" type="number" min="1" value="1" />
-      </div>
-      <div>
-        <label for="dataStartRow">Baris Mula Data (Template)</label>
-        <input id="dataStartRow" type="number" min="2" value="2" />
-      </div>
-      <div style="display:flex; align-items:flex-end;">
-        <button id="btnExportTemplate" class="btn secondary" style="width:100%;">Download Ikut Template</button>
-      </div>
-    </div>
-    <div class="hint">Padanan adalah <em>case-insensitive</em> berdasarkan tajuk lajur di baris header. Lajur yang tiada padanan akan ditinggalkan kosong.</div>
-  </section>
+function hideStatus(el){ el.hidden = true; }
 
-  <script>
-    // === Gantikan dengan Web App URL Apps Script anda ===
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwcoL2BuH__0BmXQfK3C2D_krslAb9FKqn1WBGlYOyI1G_DlULF-kVjTzxKc4AM-YI/exec';
+/* ======================= NAV TAB ======================= */
+$$('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    $$('.tab-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const tab = btn.dataset.tab;
+    $('#tab-panel').hidden = tab!=='panel';
+    $('#tab-upload').hidden = tab!=='upload';
+  });
+});
 
-    // Elemen asas
-    const drop = document.getElementById('drop');
-    const fileInput = document.getElementById('file');
-    const sheetIdInput = document.getElementById('sheetId');
-    const sheetNameInput = document.getElementById('sheetName');
-    const statusEl = document.getElementById('status');
-    const btnImport = document.getElementById('btnImport');
-    const btnExportXlsx = document.getElementById('btnExportXlsx');
-    const btnExportTemplate = document.getElementById('btnExportTemplate');
+/* ======================= API FETCH ======================= */
+function apiBase(){
+  const v = $('#apiBase').value.trim();
+  return v || DEFAULT_API_BASE;
+}
 
-    const previewWrap = document.getElementById('previewWrap');
-    const previewTbl = document.getElementById('preview');
-    const filenameEl = document.getElementById('filename');
+async function apiPost(payload){
+  const res = await fetch(apiBase(), {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(payload),
+  });
+  // Apps Script WebApp biasanya benarkan CORS; jika tidak, perlu laras deploy.
+  if(!res.ok){
+    const t = await res.text();
+    throw new Error(`HTTP ${res.status}: ${t}`);
+  }
+  return await res.json();
+}
 
-    const templateIdInput = document.getElementById('templateId');
-    const templateSheetNameInput = document.getElementById('templateSheetName');
-    const headerRowInput = document.getElementById('headerRow');
-    const dataStartRowInput = document.getElementById('dataStartRow');
-    const filenameOutInput = document.getElementById('filenameOut');
-
-    const clearSheetChk = document.getElementById('clearSheet');
-
-    let csvText = '';
-    let fileName = '';
-
-    // Utiliti status
-    function setStatus(msg, cls) {
-      statusEl.textContent = msg;
-      statusEl.className = 'status ' + (cls || 'muted');
-    }
-
-    // Utiliti muat turun Base64 → fail
-    function downloadBase64(filename, mimeType, base64) {
-      try {
-        const byteChars = atob(base64);
-        const byteNumbers = new Array(byteChars.length);
-        for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
-        const byteArray = new Uint8Array(byteNumbers);
-        const blob = new Blob([byteArray], { type: mimeType });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = filename || 'download.xlsx'; a.click();
-        URL.revokeObjectURL(url);
-        setStatus('Muat turun berjaya.', 'ok');
-      } catch (e) {
-        setStatus('Gagal memuat turun: ' + e.message, 'err');
-      }
-    }
-
-    // Pratonton CSV (ringkas)
-    function parsePreview(text) {
-      const lines = text.split(/\r?\n/).filter(Boolean).slice(0, 10);
-      const rows = lines.map(l => l.split(','));
-      previewTbl.innerHTML = '';
-      rows.forEach((r, i) => {
-        const tr = document.createElement('tr');
-        r.forEach(c => {
-          const cell = document.createElement(i === 0 ? 'th' : 'td');
-          cell.textContent = c;
-          tr.appendChild(cell);
-        });
-        previewTbl.appendChild(tr);
-      });
-      previewWrap.style.display = rows.length ? 'block' : 'none';
-    }
-
-    function enableButtons() {
-      btnImport.disabled = !(csvText && sheetIdInput.value.trim());
-      // ExportXlsx perlu hanya sheetId
-      btnExportXlsx.disabled = !sheetIdInput.value.trim();
-      // ExportTemplate perlu templateId & sheetId
-      btnExportTemplate.disabled = !(templateIdInput.value.trim() && sheetIdInput.value.trim());
-    }
-
-    // Drag & drop
-    ['dragenter','dragover'].forEach(evt => drop.addEventListener(evt, e => {
-      e.preventDefault(); e.stopPropagation(); drop.classList.add('drag');
-    }));
-    ['dragleave','drop'].forEach(evt => drop.addEventListener(evt, e => {
-      e.preventDefault(); e.stopPropagation(); drop.classList.remove('drag');
-    }));
-    drop.addEventListener('drop', e => {
-      const f = e.dataTransfer.files && e.dataTransfer.files[0];
-      if (f) handleFile(f);
+/* ======================= PANEL MANAGEMENT ======================= */
+async function loadPanels(){
+  try{
+    const out = await apiPost({action:'listPanels'});
+    const tb = $('#panelTable tbody');
+    tb.innerHTML='';
+    (out.panels||[]).forEach((p,idx)=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${idx+1}</td>
+        <td class="mono">${p.PanelCode||''}</td>
+        <td>${p.PanelName||''}</td>
+        <td>${p.Active?'<span class="pill">Active</span>':'-'}</td>
+        <td class="flex">
+          <button class="btn small" data-act="edit" data-code="${p.PanelCode}">Edit</button>
+          <button class="btn btn-danger small" data-act="del" data-code="${p.PanelCode}">Padam</button>
+        </td>`;
+      tb.appendChild(tr);
     });
-    drop.addEventListener('click', () => fileInput.click());
-    fileInput.addEventListener('change', e => {
-      const f = e.target.files && e.target.files[0];
-      if (f) handleFile(f);
-    });
+  }catch(err){
+    showStatus($('#panelStatus'), 'Ralat memuat panel: '+err.message, 'bad');
+  }
+}
 
-    function handleFile(file) {
-      if (!/\.csv$/i.test(file.name)) {
-        setStatus('Sila pilih fail .csv', 'err');
-        return;
-      }
-      fileName = file.name;
-      const reader = new FileReader();
-      reader.onload = () => {
-        csvText = reader.result || '';
-        filenameEl.textContent = fileName + ' — ' + (new Intl.NumberFormat().format(csvText.length)) + ' aksara';
-        parsePreview(csvText);
-        setStatus('Fail dimuat: ' + fileName, 'ok');
-        enableButtons();
-      };
-      reader.onerror = () => setStatus('Gagal membaca fail', 'err');
-      reader.readAsText(file, 'utf-8');
+$('#btnRefreshPanels').addEventListener('click', loadPanels);
+
+$('#btnAddPanel').addEventListener('click', async ()=>{
+  const name = $('#panelName').value.trim();
+  const code = $('#panelCode').value.trim();
+  if(!name || !code){ showStatus($('#panelStatus'),'Isi Nama & Kod Panel','bad'); return; }
+  try{
+    await apiPost({action:'createPanel', panelName:name, panelCode:code, active:true});
+    showStatus($('#panelStatus'),'Panel ditambah.', 'good');
+    $('#panelName').value=''; $('#panelCode').value='';
+    await loadPanels();
+  }catch(err){
+    showStatus($('#panelStatus'),'Gagal tambah: '+err.message,'bad');
+  }
+});
+
+$('#panelTable').addEventListener('click', async (e)=>{
+  const btn = e.target.closest('button'); if(!btn) return;
+  const code = btn.dataset.code;
+  if(btn.dataset.act==='del'){
+    if(!confirm('Padam panel '+code+'?')) return;
+    try{
+      await apiPost({action:'deletePanel', panelCode:code});
+      await loadPanels();
+      showStatus($('#panelStatus'),'Panel dipadam.','good');
+    }catch(err){
+      showStatus($('#panelStatus'),'Gagal padam: '+err.message,'bad');
     }
+  }
+  if(btn.dataset.act==='edit'){
+    const newName = prompt('Nama baharu untuk '+code+':'); if(newName==null) return;
+    const active = confirm('Tetapkan Active? OK=Active, Cancel=Inactive');
+    try{
+      await apiPost({action:'updatePanel', panelCode:code, newName:newName, active:active});
+      await loadPanels();
+      showStatus($('#panelStatus'),'Panel dikemas kini.','good');
+    }catch(err){
+      showStatus($('#panelStatus'),'Gagal kemas kini: '+err.message,'bad');
+    }
+  }
+});
 
-    sheetIdInput.addEventListener('input', enableButtons);
-    templateIdInput.addEventListener('input', enableButtons);
+$('#btnImportOnce').addEventListener('click', async ()=>{
+  try{
+    const res = await apiPost({action:'importPanelsOnce'});
+    showStatus($('#panelStatus'), `Import selesai. Ditambah: ${res.added||0}.`, 'good');
+    await loadPanels();
+  }catch(err){
+    showStatus($('#panelStatus'), 'Gagal import: '+err.message, 'bad');
+  }
+});
 
-    // Import CSV → Sheet
-    btnImport.addEventListener('click', async () => {
-      try {
-        const sheetId = sheetIdInput.value.trim();
-        if (!sheetId) return setStatus('Sila masukkan Spreadsheet ID', 'err');
-        if (!csvText) return setStatus('Tiada kandungan CSV', 'err');
+/* ======================= UPLOAD CSV ======================= */
+let knownPanels = []; // untuk dropdown & autokesan
+let pendingFiles = []; // {file, name, text, panelCode?, stats?}
 
-        const sheetName = (sheetNameInput.value || 'Sheet1').trim();
-        const mode = document.querySelector('input[name="mode"]:checked').value;
-        const clearSheet = !!clearSheetChk.checked;
+async function refreshKnownPanels(){
+  try{
+    const out = await apiPost({action:'listPanels'});
+    knownPanels = (out.panels||[]).filter(p=>p.Active!==false);
+  }catch(e){
+    // fallback kosong
+    knownPanels = [];
+  }
+}
 
-        btnImport.disabled = true;
-        setStatus('Mengimport ke Google Sheet…');
-        const resp = await fetch(SCRIPT_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({
-            action: 'importCsv',
-            sheetId, sheetName, csvText, mode, clearSheet
-          })
-        });
-        const data = await resp.json();
-        if (data && data.status === 'ok') {
-          setStatus(`Import berjaya: ${data.rowsWritten} baris ditulis ke "${data.sheetName}".`, 'ok');
-        } else {
-          setStatus('Ralat import: ' + (data && data.message ? data.message : 'Tidak diketahui'), 'err');
+function panelDropdownHtml(selected){
+  const opts = knownPanels.map(p=>`<option value="${(p.PanelCode||'').toUpperCase()}" ${selected && selected.toUpperCase()===(p.PanelCode||'').toUpperCase()?'selected':''}>${(p.PanelCode||'').toUpperCase()} — ${p.PanelName||''}</option>`).join('');
+  return `<select class="panel-select"><option value="">-- Pilih Panel --</option>${opts}</select>`;
+}
+
+function inferPanelFromName(name){
+  const upper = (name||'').toUpperCase();
+  for(const p of knownPanels){
+    const code = (p.PanelCode||'').toUpperCase();
+    if(code && upper.includes(code)) return code;
+  }
+  return '';
+}
+
+async function readFileAsText(file){
+  return new Promise((res,rej)=>{
+    const fr = new FileReader();
+    fr.onload = () => res(fr.result);
+    fr.onerror = rej;
+    fr.readAsText(file);
+  });
+}
+
+function parseCsvQuickStats(text){
+  // Anggaran klien: cari lajur “Total Payment Panel (RM)” dan kira jumlah & bilangan baris (bukan authoritative)
+  try{
+    const rows = text.split(/\r?\n/).map(r=>r.split(','));
+    if(rows.length<2) return null;
+    const header = rows[0].map(h=>h.trim());
+    const idxAmount = header.findIndex(h=>/total\s*payment/i.test(h) || /rm\)/i.test(h));
+    const idxDate = header.findIndex(h=>/date/i.test(h) || /tarikh/i.test(h));
+    let count=0, sum=0, months={};
+    for(let i=1;i<rows.length;i++){
+      const r = rows[i];
+      if(!r || r.length===0 || r.every(x=>!x)) continue;
+      count++;
+      if(idxAmount>=0){
+        const raw = (r[idxAmount]||'').replace(/[^\d\.\-]/g,'').replace(/,/g,'');
+        const f = parseFloat(raw); if(!isNaN(f)) sum+=f;
+      }
+      if(idxDate>=0){
+        const d = new Date(r[idxDate]);
+        if(!isNaN(d)) {
+          const mm = String(d.getMonth()+1).padStart(2,'0');
+          const yy = d.getFullYear();
+          const key = `${yy}-${mm}`;
+          months[key] = (months[key]||0)+1;
         }
-      } catch (e) {
-        setStatus('Ralat jaringan (import): ' + e.message, 'err');
-      } finally {
-        btnImport.disabled = false;
       }
+    }
+    return {count,sum,months};
+  }catch(e){ return null; }
+}
+
+function renderFileTable(){
+  const tb = $('#fileTable tbody');
+  tb.innerHTML = '';
+  for(const item of pendingFiles){
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>
+        <div class="mono">${item.name}</div>
+        ${item.stats?`<div class="small hint">Anggaran: ${item.stats.count} baris, Jumlah ≈ ${formatRM(item.stats.sum)}</div>`:''}
+      </td>
+      <td>${panelDropdownHtml(item.panelCode||inferPanelFromName(item.name))}</td>
+      <td>
+        <div class="small">Bulan dominan (anggaran klien): ${
+          item.stats && Object.keys(item.stats.months||{}).length
+            ? Object.entries(item.stats.months).sort((a,b)=>b[1]-a[1])[0][0]
+            : '-'
+        }</div>
+      </td>
+      <td>
+        <button class="btn btn-danger small btn-remove">Buang</button>
+      </td>
+    `;
+    tb.appendChild(tr);
+  }
+  // wire selects + remove
+  $$('#fileTable tbody tr').forEach((tr, idx)=>{
+    const sel = tr.querySelector('.panel-select');
+    sel.addEventListener('change', e=>{
+      pendingFiles[idx].panelCode = e.target.value;
     });
-
-    // Export keseluruhan Spreadsheet → Excel
-    btnExportXlsx.addEventListener('click', async () => {
-      try {
-        const sheetId = sheetIdInput.value.trim();
-        if (!sheetId) return setStatus('Sila masukkan Spreadsheet ID', 'err');
-        btnExportXlsx.disabled = true;
-        setStatus('Menjana Excel (keseluruhan)…');
-        const resp = await fetch(SCRIPT_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({
-            action: 'exportXlsx',
-            sheetId,
-            filename: 'ExportedSheet'
-          })
-        });
-        const data = await resp.json();
-        if (data && data.status === 'ok' && data.base64) {
-          downloadBase64(data.filename || 'export.xlsx',
-                         data.mimeType || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                         data.base64);
-        } else {
-          setStatus('Ralat export: ' + (data && data.message ? data.message : 'Tidak diketahui'), 'err');
-        }
-      } catch (e) {
-        setStatus('Ralat jaringan (export): ' + e.message, 'err');
-      } finally {
-        btnExportXlsx.disabled = false;
-      }
+    const btn = tr.querySelector('.btn-remove');
+    btn.addEventListener('click', ()=>{
+      pendingFiles.splice(idx,1);
+      renderFileTable();
     });
+  });
+}
 
-    // Export Ikut Template (header-matching)
-    btnExportTemplate.addEventListener('click', async () => {
-      try {
-        const templateId = templateIdInput.value.trim();
-        const sourceSheetId = sheetIdInput.value.trim();
-        if (!templateId || !sourceSheetId) return setStatus('Template ID & Spreadsheet ID diperlukan.', 'err');
+$('#btnScanFiles').addEventListener('click', async ()=>{
+  const files = Array.from($('#csvFiles').files||[]);
+  if(!files.length){ showStatus($('#uploadStatus'),'Sila pilih fail CSV dahulu.','bad'); return; }
+  await refreshKnownPanels();
+  pendingFiles = [];
+  showStatus($('#uploadStatus'),'Mengimbas fail…','good');
+  for(const f of files){
+    const text = await readFileAsText(f);
+    const stats = parseCsvQuickStats(text);
+    pendingFiles.push({file:f, name:f.name, text, stats});
+  }
+  hideStatus($('#uploadStatus'));
+  renderFileTable();
+});
 
-        const sourceSheetName = (sheetNameInput.value || 'Sheet1').trim();
-        const templateSheetName = templateSheetNameInput.value.trim();
-        const headerRow = Number(headerRowInput.value || 1);
-        const dataStartRow = Number(dataStartRowInput.value || 2);
-        const filename = (filenameOutInput.value || 'Output').trim();
+async function toBase64(file){
+  return new Promise((resolve,reject)=>{
+    const fr = new FileReader();
+    fr.onload = () => resolve(fr.result.split(',')[1]);
+    fr.onerror = reject;
+    fr.readAsDataURL(file);
+  });
+}
 
-        btnExportTemplate.disabled = true;
-        setStatus('Menjana Excel berdasarkan Template…');
-        const resp = await fetch(SCRIPT_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({
-            action: 'exportTemplate',
-            templateId,
-            sourceSheetId,
-            sourceSheetName,
-            templateSheetName,
-            headerRow,
-            dataStartRow,
-            filename
-          })
-        });
-        const data = await resp.json();
-        if (data && data.status === 'ok' && data.base64) {
-          downloadBase64(data.filename || (filename + '.xlsx'),
-                         data.mimeType || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                         data.base64);
-        } else {
-          setStatus('Ralat export (template): ' + (data && data.message ? data.message : 'Tidak diketahui'), 'err');
-        }
-      } catch (e) {
-        setStatus('Ralat jaringan (template): ' + e.message, 'err');
-      } finally {
-        btnExportTemplate.disabled = false;
-      }
+$('#btnProcess').addEventListener('click', async ()=>{
+  if(!pendingFiles.length){ showStatus($('#uploadStatus'),'Tiada fail untuk diproses.','bad'); return; }
+  await refreshKnownPanels();
+  // Pastikan semua fail ada panelCode (sama ada infer nama fail atau pilihan manual)
+  for(const it of pendingFiles){
+    it.panelCode = it.panelCode || inferPanelFromName(it.name);
+    if(!it.panelCode){
+      showStatus($('#uploadStatus'), `Panel tidak ditetapkan untuk fail: ${it.name}. Sila pilih di dropdown.`, 'bad');
+      return;
+    }
+  }
+  showStatus($('#uploadStatus'),'Memuat naik & memproses di server… ini boleh ambil sedikit masa.','good');
+
+  try{
+    // Sediakan payload
+    const filesPayload = [];
+    for(const it of pendingFiles){
+      const b64 = await toBase64(it.file);
+      filesPayload.push({name: it.name, content: b64, encoding: 'base64', panelCode: it.panelCode});
+    }
+    const res = await apiPost({action:'processCsvFiles', files: filesPayload});
+    hideStatus($('#uploadStatus'));
+    const out = res.files || [];
+    // Paparkan hasil
+    const tb = $('#resultTable tbody'); tb.innerHTML='';
+    if(!out.length){
+      $('#resultsCard').hidden = false;
+      tb.innerHTML = `<tr><td colspan="5" class="small">Tiada fail dijana.</td></tr>`;
+      return;
+    }
+    out.forEach(f=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="mono">${f.panelCode}</td>
+        <td class="mono">${f.filename}</td>
+        <td>${f.rows}</td>
+        <td>${formatRM(f.amountSum)}</td>
+        <td><a class="button-link" target="_blank" rel="noopener" href="${f.downloadUrl}">Muat turun</a></td>
+      `;
+      tb.appendChild(tr);
     });
+    $('#resultsCard').hidden = false;
+  }catch(err){
+    showStatus($('#uploadStatus'), 'Ralat proses: '+err.message, 'bad');
+  }
+});
 
-    // Mula
-    enableButtons();
-  </script>
+/* ======================= INIT ======================= */
+(async function init(){
+  // Prefill API base
+  $('#apiBase').value = DEFAULT_API_BASE;
+  // Muat panel
+  await loadPanels();
+  await refreshKnownPanels();
+})();
+</script>
 </body>
 </html>
