@@ -6,149 +6,302 @@
   <title>Panel CSV → SQL Template XLSX</title>
   <style>
     :root{
-      --bg:#0f172a; --card:#111827; --muted:#94a3b8; --text:#e5e7eb; --brand:#22c55e; --brand2:#10b981; --warn:#f59e0b; --err:#ef4444; --ok:#22c55e;
-      --stroke:#1f2937; --chip:#0b1222; --chip2:#0e182b;
+      --bg:#0b1020; --card:#0c1428; --stroke:#0f213b; --text:#e6eefc; --muted:#9fb2d9;
+      --brand:#22c55e; --brand2:#10b981; --chip:#0a1326; --chip2:#0b1a3a; --err:#ef4444; --ok:#22c55e;
     }
-    html,body{margin:0;height:100%;background:linear-gradient(180deg,#0b1020,#0b0f1a);}
-    *{box-sizing:border-box;font-family:ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji","Segoe UI Emoji";}
-    .wrap{max-width:1100px;margin:32px auto;padding:0 16px;color:var(--text);}
-    .hero{display:flex;gap:18px;align-items:center;margin-bottom:18px}
-    .badge{font-size:12px;color:#a7f3d0;background:#064e3b;border:1px solid #065f46;border-radius:999px;padding:4px 10px}
-    .card{background:linear-gradient(180deg,#0b1222,#0c1428); border:1px solid #0f213b; border-radius:14px; padding:18px; box-shadow:0 0 0 1px rgba(255,255,255,0.02) inset;}
+    html,body{margin:0;height:100%;background:linear-gradient(180deg,var(--bg),#0a0f1a);color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial}
+    *{box-sizing:border-box}
+    .wrap{max-width:1120px;margin:32px auto;padding:0 16px}
+    .nav{display:flex;gap:10px;margin-bottom:16px}
+    .tab{padding:10px 14px;border-radius:10px;border:1px solid var(--stroke);background:linear-gradient(180deg,#0b162b,#0b1426);color:#cde2ff;cursor:pointer}
+    .tab.active{background:linear-gradient(180deg,#11244a,#0e213f);border-color:#1f3b6a}
+    .card{background:linear-gradient(180deg,var(--card),#0a1326);border:1px solid var(--stroke);border-radius:14px;padding:16px}
     .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
-    .row > * {flex:0 0 auto}
     .grow{flex:1 1 auto}
-    .btn{background:linear-gradient(180deg,#16a34a,#22c55e); border:1px solid #22c55e; color:#052e16; font-weight:700; padding:10px 14px; border-radius:10px; cursor:pointer}
-    .btn:disabled{opacity:.5;cursor:not-allowed}
+    .btn{background:linear-gradient(180deg,#16a34a,#22c55e);border:1px solid #22c55e;color:#052e16;font-weight:700;padding:10px 14px;border-radius:10px;cursor:pointer}
+    .btn:disabled{opacity:.6;cursor:not-allowed}
     .btn2{background:#0b162b;border:1px solid #12315d;color:#dbeafe;padding:10px 14px;border-radius:10px;cursor:pointer}
-    .btn3{background:#111827;border:1px solid #1f2937;color:#e5e7eb;padding:10px 12px;border-radius:8px;cursor:pointer}
+    .btn3{background:#111827;border:1px solid #1f2937;color:#e5e7eb;padding:8px 12px;border-radius:8px;cursor:pointer}
     .muted{color:var(--muted);font-size:14px}
+    .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace}
+    input[type="text"], select, input[type="search"]{
+      background:#0b162b;color:#e5e7eb;border:1px solid #12315d;border-radius:10px;padding:10px 12px;min-width:220px
+    }
+    input[type="checkbox"]{transform:scale(1.1)}
+    .table{width:100%;border-collapse:collapse;background:#0b1222;border:1px solid var(--stroke);border-radius:12px;overflow:hidden}
+    .table th,.table td{padding:10px 12px;border-bottom:1px solid var(--stroke);font-size:14px}
+    .table th{background:#0b152a;text-align:left;color:#9fb2d9}
     .pill{padding:2px 8px;border-radius:999px;font-size:12px;border:1px solid #1e293b;background:#0a1222;color:#93c5fd}
-    .ok{color:#10b981}.err{color:#ef4444}
-    .grid{display:grid;gap:10px}
+    .ok{color:var(--ok)} .err{color:var(--err)}
+    .grid{display:grid;gap:12px}
     .drop{border:1.5px dashed #1e3a8a;border-radius:14px;background:linear-gradient(180deg,#09132a,#0a1428);padding:22px;text-align:center;cursor:pointer}
     .drop.drag{background:linear-gradient(180deg,#0b1a3a,#0a162f); border-color:#2563eb}
-    .files{width:100%;border-collapse:collapse;background:#0b1222;border:1px solid #14223d;border-radius:10px;overflow:hidden}
-    .files th,.files td{padding:10px 12px;border-bottom:1px solid #0f213b;font-size:14px}
-    .files th{background:#0b152a;text-align:left;color:#9fb2d9}
-    .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace}
-    select, input[type="text"]{
-      background:#0b162b;color:#e5e7eb;border:1px solid #12315d;border-radius:8px;padding:8px 10px;min-width:220px
-    }
-    .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+    .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
     .cardItem{background:linear-gradient(180deg,#0b1222,#0c1428); border:1px solid #0f213b; border-radius:12px; padding:14px}
     a.dl{display:inline-block;margin-top:8px;background:#0b162b;border:1px solid #12315d;color:#a5f3fc;text-decoration:none;padding:8px 10px;border-radius:8px}
-    .footer{margin-top:24px;color:#9ca3af;font-size:12px}
+    .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="hero">
-      <svg width="36" height="36" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h16" stroke="#a5f3fc" stroke-width="2" stroke-linecap="round"/></svg>
-      <div>
-        <div style="font-size:20px;font-weight:800;letter-spacing:.3px">Panel CSV → SQL Template XLSX</div>
-        <div class="muted">Muat naik berbilang CSV • Auto-detect panel daripada nama fail • Export ikut had baris & jumlah • Nama fail pintar</div>
-      </div>
-      <span class="badge">vUI 2.0</span>
+<div class="wrap">
+  <div class="row" style="margin-bottom:10px">
+    <div class="grow">
+      <div style="font-size:22px;font-weight:800;letter-spacing:.3px">Panel CSV → SQL Template XLSX</div>
+      <div class="muted">Muat naik berbilang CSV • Auto-detect panel dari nama fail • Export menepati templat • Pengurusan panel lengkap</div>
+    </div>
+    <span class="pill mono" id="apiLabel">API</span>
+  </div>
+
+  <div class="nav">
+    <button class="tab active" data-tab="tab1">Halaman 1 — Panel Register</button>
+    <button class="tab" data-tab="tab2">Halaman 2 — Upload & Export</button>
+  </div>
+
+  <!-- TAB 1: Panel Register -->
+  <section id="tab1" class="card grid" style="gap:12px">
+    <div class="toolbar">
+      <input type="text" id="panelName" placeholder="Nama Panel (cth: AIA HEALTH SERVIS SDN BHD)" class="grow"/>
+      <input type="text" id="panelCode" placeholder="Kod Panel (cth: 300-A0001)" />
+      <label class="muted" style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="panelActive" checked/> Aktif</label>
+      <button class="btn" id="btnAdd">Simpan</button>
+      <button class="btn2" id="btnRefresh1">Refresh</button>
+      <span class="muted" id="panelHint">Isi nama & kod panel, kemudian Simpan.</span>
     </div>
 
-    <div class="card grid" style="gap:14px">
-      <div class="row">
-        <div class="grow">
-          <div class="muted">API</div>
-          <div class="mono" id="apiBaseShow"></div>
-        </div>
-        <button class="btn3" id="btnRefreshPanels">Refresh Panels</button>
-        <button class="btn2" id="btnClean">Clean Now</button>
-        <button class="btn" id="btnProcess" disabled>Proses & Eksport XLSX</button>
-      </div>
-
-      <div id="panelSummary" class="muted">Memuat panel…</div>
-
-      <label class="drop" id="drop">
-        <input id="fileInput" type="file" accept=".csv,text/csv" multiple hidden />
-        <div style="font-size:16px;font-weight:700;margin-bottom:6px">Seret & lepas CSV di sini, atau klik untuk pilih</div>
-        <div class="muted">Namakan fail ringkas (cth <b>AIA.csv</b>). Sistem cuba padankan <i>PanelName</i>. Jika tidak tepat, pilih manual.</div>
-      </label>
-
-      <table class="files" id="fileTable" style="display:none">
-        <thead>
-          <tr>
-            <th style="width:36px">#</th>
-            <th>Fail</th>
-            <th style="min-width:220px">Panel (auto / manual)</th>
-            <th style="width:120px">Status</th>
-            <th style="width:80px"></th>
-          </tr>
-        </thead>
-        <tbody id="fileTBody"></tbody>
-      </table>
+    <div class="row" style="justify-content:space-between">
+      <div class="muted">Senarai panel aktif dalam Sheet1.</div>
+      <input type="search" id="searchPanel" placeholder="Cari nama/kod…" />
     </div>
 
-    <div class="card" style="margin-top:16px;display:none" id="outWrap">
+    <table class="table" id="panelTable">
+      <thead>
+        <tr>
+          <th style="width:48px">#</th>
+          <th>Nama Panel</th>
+          <th style="width:180px">Kod Panel</th>
+          <th style="width:90px">Aktif</th>
+          <th style="width:180px">Tindakan</th>
+        </tr>
+      </thead>
+      <tbody id="panelTBody"></tbody>
+    </table>
+  </section>
+
+  <!-- TAB 2: Upload & Export -->
+  <section id="tab2" class="card grid" style="gap:14px; display:none">
+    <div class="row">
+      <div class="grow">
+        <div class="muted">API Web App</div>
+        <div class="mono" id="apiBaseShow"></div>
+      </div>
+      <button class="btn2" id="btnRefreshPanels">Refresh Panels</button>
+      <button class="btn2" id="btnClean">Clean Now</button>
+      <button class="btn" id="btnProcess" disabled>Proses & Eksport XLSX</button>
+    </div>
+
+    <div id="panelSummary" class="muted">Memuat panel…</div>
+
+    <label class="drop" id="drop">
+      <input id="fileInput" type="file" accept=".csv,text/csv" multiple hidden />
+      <div style="font-size:16px;font-weight:700;margin-bottom:6px">Seret & lepas CSV di sini, atau klik untuk pilih</div>
+      <div class="muted">Namakan fail ringkas (cth <b>AIA.csv</b>). Sistem cuba padankan <i>Panel</i>. Jika tak tepat, pilih manual.</div>
+    </label>
+
+    <table class="table" id="fileTable" style="display:none">
+      <thead>
+      <tr>
+        <th style="width:36px">#</th>
+        <th>Fail</th>
+        <th style="min-width:240px">Panel (auto / manual)</th>
+        <th style="width:120px">Status</th>
+        <th style="width:88px"></th>
+      </tr>
+      </thead>
+      <tbody id="fileTBody"></tbody>
+    </table>
+
+    <div class="card" id="outWrap" style="display:none">
       <div class="row">
         <div class="grow"><b>Hasil Eksport</b></div>
         <span class="pill" id="exportMeta"></span>
       </div>
       <div class="cards" id="cards"></div>
     </div>
+  </section>
 
-    <div class="footer">Tip: jika panel tak dikesan dari nama fail, pilih manual di dropdown. Sistem akan gunakan <span class="mono">PanelCode</span> sebenar dari Sheet1.</div>
-  </div>
+  <div class="muted" style="margin-top:16px">Tip: pastikan Web App GAS anda dideploy “Anyone can access”. Kaedah POST menggunakan <span class="mono">payload=&lt;JSON&gt;</span> mengelak preflight, jadi tiada isu CORS.</div>
+</div>
 
 <script>
+/* ===================== CONFIG ===================== */
 const API_BASE = "https://script.google.com/macros/s/AKfycbwcoL2BuH__0BmXQfK3C2D_krslAb9FKqn1WBGlYOyI1G_DlULF-kVjTzxKc4AM-YI/exec";
 
-const els = {
-  apiBaseShow: document.getElementById('apiBaseShow'),
-  panelSummary: document.getElementById('panelSummary'),
-  fileInput: document.getElementById('fileInput'),
-  drop: document.getElementById('drop'),
-  tbl: document.getElementById('fileTable'),
-  tbody: document.getElementById('fileTBody'),
-  btnProcess: document.getElementById('btnProcess'),
-  btnRefreshPanels: document.getElementById('btnRefreshPanels'),
-  btnClean: document.getElementById('btnClean'),
-  outWrap: document.getElementById('outWrap'),
-  cards: document.getElementById('cards'),
-  exportMeta: document.getElementById('exportMeta')
-};
-
-els.apiBaseShow.textContent = API_BASE;
-
-let PANELS = [];        // {PanelName, PanelCode, Active}
-let PANEL_MAP = new Map(); // code -> name
-let PANEL_OPTIONS_HTML = '';
-let filesQueue = [];    // {id,name,contentText,panelCode,auto, status}
-
+/* ============== Helper: simple POST (no CORS preflight) ============== */
 function apiPost(payload){
+  // Elak preflight: hantar sebagai application/x-www-form-urlencoded
+  const body = new URLSearchParams({ payload: JSON.stringify(payload) });
   return fetch(API_BASE, {
     method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify(payload)
+    headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},
+    body
   }).then(r=>r.json());
 }
+function escapeHtml(s){return String(s).replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m]))}
+function byId(id){return document.getElementById(id)}
+function setBusy(b){[els.btnAdd,els.btnRefresh1,els.btnProcess,els.btnRefreshPanels,els.btnClean].forEach(x=>x&&(x.disabled=b));}
 
-async function refreshPanels(){
-  els.panelSummary.textContent = 'Memuat panel…';
+/* ===================== Elements ===================== */
+const els = {
+  apiLabel: byId('apiLabel'),
+  apiBaseShow: byId('apiBaseShow'),
+  // tab
+  tabBtns: Array.from(document.querySelectorAll('.tab')),
+  tab1: byId('tab1'),
+  tab2: byId('tab2'),
+  // tab1
+  panelName: byId('panelName'),
+  panelCode: byId('panelCode'),
+  panelActive: byId('panelActive'),
+  btnAdd: byId('btnAdd'),
+  btnRefresh1: byId('btnRefresh1'),
+  panelTBody: byId('panelTBody'),
+  searchPanel: byId('searchPanel'),
+  // tab2
+  panelSummary: byId('panelSummary'),
+  drop: byId('drop'),
+  fileInput: byId('fileInput'),
+  fileTable: byId('fileTable'),
+  fileTBody: byId('fileTBody'),
+  btnProcess: byId('btnProcess'),
+  btnRefreshPanels: byId('btnRefreshPanels'),
+  btnClean: byId('btnClean'),
+  outWrap: byId('outWrap'),
+  exportMeta: byId('exportMeta'),
+  cards: byId('cards')
+};
+els.apiLabel.textContent = 'API: ' + (new URL(API_BASE)).host;
+els.apiBaseShow.textContent = API_BASE;
+
+/* ===================== NAV ===================== */
+els.tabBtns.forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    els.tabBtns.forEach(x=>x.classList.remove('active'));
+    btn.classList.add('active');
+    const id = btn.getAttribute('data-tab');
+    els.tab1.style.display = (id==='tab1')?'block':'none';
+    els.tab2.style.display = (id==='tab2')?'block':'none';
+  });
+});
+
+/* ===================== DATA (Panels) ===================== */
+let PANELS = [];         // {PanelName, PanelCode, Active}
+let PANEL_OPTIONS_HTML = '';
+
+async function loadPanels(){
   const res = await apiPost({action:'listPanels'});
-  if(!res || !res.ok){ els.panelSummary.innerHTML = `<span class="err">Gagal muat panel.</span>`; return; }
+  if(!res || !res.ok){ console.error(res); return; }
   PANELS = (res.panels||[]).filter(p=>p.Active!==false);
-  PANEL_MAP.clear();
-  PANELS.forEach(p=>PANEL_MAP.set(String(p.PanelCode).toUpperCase(), String(p.PanelName||'').trim()));
-
-  // build dropdown options
+  buildPanelOptions();
+  renderPanelTable();
+  // tab2 summary
+  els.panelSummary.textContent = `Jumlah panel aktif: ${PANELS.length}`;
+}
+function buildPanelOptions(){
   PANEL_OPTIONS_HTML = `<option value="">— pilih panel —</option>` +
     PANELS.map(p => `<option value="${escapeHtml(p.PanelCode)}">${escapeHtml(p.PanelName)} — ${escapeHtml(p.PanelCode)}</option>`).join('');
-
-  els.panelSummary.innerHTML = `Jumlah panel aktif: <b>${PANELS.length}</b>`;
 }
 
-function escapeHtml(s){return String(s).replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m]))}
+/* ===================== TAB 1 – CRUD Panel ===================== */
+function renderPanelTable(){
+  const q = els.searchPanel.value.trim().toLowerCase();
+  const rows = PANELS
+    .filter(p => !q || (String(p.PanelName).toLowerCase().includes(q) || String(p.PanelCode).toLowerCase().includes(q)))
+    .map((p,i)=> rowPanel(p,i));
+  els.panelTBody.innerHTML = '';
+  rows.forEach(tr => els.panelTBody.appendChild(tr));
+}
+function rowPanel(p, idx){
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td>${idx+1}</td>
+    <td><span class="mono">${escapeHtml(p.PanelName)}</span></td>
+    <td><span class="mono">${escapeHtml(p.PanelCode)}</span></td>
+    <td>${p.Active!==false?'<span class="ok">Ya</span>':'<span class="err">Tidak</span>'}</td>
+    <td>
+      <button class="btn3">Edit</button>
+      <button class="btn3" style="margin-left:6px">Padam</button>
+    </td>`;
+  const [ , , , , tdAct ] = tr.children;
+  const btnEdit = tdAct.children[0];
+  const btnDel  = tdAct.children[1];
 
-// ======== Auto detect panel from short filename ========
+  btnEdit.addEventListener('click', ()=>{
+    // Convert row to editable
+    tr.innerHTML = `
+      <td>${idx+1}</td>
+      <td><input type="text" value="${escapeHtml(p.PanelName)}" style="width:100%"/></td>
+      <td><span class="mono">${escapeHtml(p.PanelCode)}</span></td>
+      <td><label style="display:flex;gap:6px;align-items:center"><input type="checkbox" ${p.Active!==false?'checked':''}/> Aktif</label></td>
+      <td>
+        <button class="btn3">Simpan</button>
+        <button class="btn3" style="margin-left:6px">Batal</button>
+      </td>`;
+    const inputName = tr.children[1].querySelector('input');
+    const chkActive = tr.children[3].querySelector('input[type="checkbox"]');
+    const bSave = tr.children[4].children[0];
+    const bCancel = tr.children[4].children[1];
+
+    bSave.addEventListener('click', async ()=>{
+      setBusy(true);
+      const res = await apiPost({action:'updatePanel', panelCode:p.PanelCode, newName: inputName.value, active: chkActive.checked});
+      setBusy(false);
+      if(!res || !res.ok){ alert('Gagal kemaskini panel'); return; }
+      await refreshPanelsBoth();
+    });
+    bCancel.addEventListener('click', renderPanelTable);
+  });
+
+  btnDel.addEventListener('click', async ()=>{
+    if(!confirm('Padam panel ini?')) return;
+    setBusy(true);
+    const res = await apiPost({action:'deletePanel', panelCode:p.PanelCode});
+    setBusy(false);
+    if(!res || !res.ok){ alert('Gagal padam panel'); return; }
+    await refreshPanelsBoth();
+  });
+
+  return tr;
+}
+
+els.btnAdd.addEventListener('click', async ()=>{
+  const name = els.panelName.value.trim();
+  const code = els.panelCode.value.trim();
+  const active = els.panelActive.checked;
+  if(!name || !code){ alert('Isi Nama Panel dan Kod Panel.'); return; }
+  setBusy(true);
+  const res = await apiPost({action:'createPanel', panelName:name, panelCode:code, active});
+  setBusy(false);
+  if(!res || !res.ok){ alert(res && res.error ? res.error : 'Gagal simpan panel'); return; }
+  els.panelName.value=''; els.panelCode.value='';
+  await refreshPanelsBoth();
+});
+els.btnRefresh1.addEventListener('click', refreshPanelsBoth);
+els.searchPanel.addEventListener('input', renderPanelTable);
+
+async function refreshPanelsBoth(){
+  const res = await apiPost({action:'listPanels'});
+  if(res && res.ok){
+    PANELS = (res.panels||[]).filter(p=>p.Active!==false);
+    buildPanelOptions();
+    renderPanelTable();
+    els.panelSummary.textContent = `Jumlah panel aktif: ${PANELS.length}`;
+  }
+}
+
+/* ===================== TAB 2 – Upload & Export ===================== */
+let filesQueue = []; // {id,name,text,panelCode,auto,status}
+
 function buildPanelKeys(){
-  // produce keys for fuzzy matching: name words, acronym, code
   return PANELS.map(p=>{
     const code = String(p.PanelCode||'').toUpperCase();
     const name = String(p.PanelName||'').toUpperCase();
@@ -157,194 +310,122 @@ function buildPanelKeys(){
     const acronym = (name.match(/\b[A-Z]{2,}\b/g)||[]).join(' ');
     const keys = new Set([code, ...words]);
     if(acronym) acronym.split(' ').forEach(k=>keys.add(k));
-    // also add first token (often acronym/company short)
     if(words.length) keys.add(words[0]);
-    return {code, name, keys: Array.from(keys)};
+    return {code, name, keys:[...keys]};
   });
 }
 function detectPanelFromFilename(fname){
-  const base = fname.split('/').pop();
-  const stem = base.replace(/\.[^.]+$/,'').toUpperCase(); // remove extension
-  const candidates = buildPanelKeys();
-  // score: longest key found within filename
-  let best = null;
-  for(const c of candidates){
+  const stem = fname.split('/').pop().replace(/\.[^.]+$/,'').toUpperCase();
+  const cands = buildPanelKeys();
+  let best=null;
+  for(const c of cands){
     for(const k of c.keys){
       if(!k) continue;
-      if(stem.includes(k)){
-        const score = k.length; // prefer longer
-        if(!best || score > best.score){
-          best = {code:c.code, score, key:k};
-        }
-      }
+      if(stem.includes(k)){ const score=k.length; if(!best||score>best.score) best={code:c.code,score}; }
     }
   }
-  return best ? best.code : '';
+  return best?best.code:'';
 }
 
-// ======== UI: file queue ========
-function addFiles(fileList){
-  const arr = Array.from(fileList||[]);
+function addFiles(list){
+  const arr = Array.from(list||[]);
   if(!arr.length) return;
-  els.tbl.style.display = 'table';
-  for(const f of arr){
-    if(!/\.csv$/i.test(f.name)){ continue; }
+  els.fileTable.style.display = 'table';
+  arr.forEach(f=>{
+    if(!/\.csv$/i.test(f.name)) return;
     const id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now())+Math.random();
     const reader = new FileReader();
-    reader.onload = () => {
-      const text = reader.result || '';
-      let panelCode = detectPanelFromFilename(f.name);
-      let auto = !!panelCode;
-      filesQueue.push({id, name:f.name, contentText:String(text), panelCode, auto, status:'Ready'});
+    reader.onload = ()=>{
+      const text = String(reader.result||'');
+      const code = detectPanelFromFilename(f.name);
+      filesQueue.push({id,name:f.name,text, panelCode:code||'', auto:!!code, status:'Ready'});
       renderQueue();
     };
     reader.readAsText(f);
-  }
+  });
 }
-
 function renderQueue(){
-  els.tbody.innerHTML = '';
+  els.fileTBody.innerHTML = '';
   filesQueue.forEach((it,idx)=>{
     const tr = document.createElement('tr');
-
-    const tdIdx = document.createElement('td'); tdIdx.textContent = String(idx+1); tr.appendChild(tdIdx);
-
-    const tdName = document.createElement('td');
-    tdName.innerHTML = `<div class="mono">${escapeHtml(it.name)}</div><div class="muted" style="font-size:12px">${it.auto?'<span class="ok">auto</span>':'manual'}${it.panelCode?` · ${escapeHtml(it.panelCode)}`:''}</div>`;
-    tr.appendChild(tdName);
-
-    const tdSel = document.createElement('td');
+    tr.innerHTML = `
+      <td>${idx+1}</td>
+      <td><div class="mono">${escapeHtml(it.name)}</div><div class="muted" style="font-size:12px">${it.auto?'auto':'manual'}${it.panelCode?` · ${escapeHtml(it.panelCode)}`:''}</div></td>
+      <td></td>
+      <td><span class="${it.status==='OK'?'ok':(it.status==='Ready'?'muted':'err')}">${escapeHtml(it.status)}</span></td>
+      <td><button class="btn3">Buang</button></td>`;
+    const tdSel = tr.children[2];
     const sel = document.createElement('select');
     sel.innerHTML = PANEL_OPTIONS_HTML;
     sel.value = it.panelCode || '';
-    sel.onchange = e => { it.panelCode = e.target.value; it.auto = false; renderQueue(); };
+    sel.onchange = e=>{ it.panelCode = e.target.value; it.auto=false; renderQueue(); };
     tdSel.appendChild(sel);
-    tr.appendChild(tdSel);
-
-    const tdStatus = document.createElement('td');
-    tdStatus.innerHTML = `<span class="${it.status==='Ready'?'muted':(it.status==='OK'?'ok':'err')}">${escapeHtml(it.status)}</span>`;
-    tr.appendChild(tdStatus);
-
-    const tdAct = document.createElement('td');
-    const rm = document.createElement('button'); rm.className='btn3'; rm.textContent='Buang';
-    rm.onclick = () => { filesQueue = filesQueue.filter(x=>x.id!==it.id); renderQueue(); };
-    tdAct.appendChild(rm);
-    tr.appendChild(tdAct);
-
-    els.tbody.appendChild(tr);
+    tr.children[4].children[0].onclick = ()=>{ filesQueue = filesQueue.filter(x=>x.id!==it.id); renderQueue(); };
+    els.fileTBody.appendChild(tr);
   });
-
-  // enable Process if at least one item with panelCode chosen
-  const can = filesQueue.some(x=>x.panelCode);
-  els.btnProcess.disabled = !can;
+  els.btnProcess.disabled = !filesQueue.some(x=>x.panelCode);
 }
 
 async function processAll(){
-  // validate: all files must have panelCode
   const missing = filesQueue.filter(x=>!x.panelCode);
-  if(missing.length){
-    alert('Sila pilih Panel untuk semua fail yang belum dipadankan.');
-    return;
-  }
+  if(missing.length){ alert('Sila pilih Panel untuk semua fail.'); return; }
   setBusy(true);
-  // build payload for backend
-  const payload = {
-    action: 'processCsvFiles',
-    files: filesQueue.map(x=>({
-      name: x.name,
-      content: x.contentText,
-      panelCode: x.panelCode
-    }))
-  };
+  const payload = { action:'processCsvFiles', files: filesQueue.map(x=>({name:x.name, content:x.text, panelCode:x.panelCode})) };
   let res;
-  try{
-    res = await apiPost(payload);
-  }catch(e){
-    setBusy(false);
-    alert('Ralat rangkaian/API.');
-    return;
-  }
+  try{ res = await apiPost(payload); }catch(e){ setBusy(false); alert('Ralat rangkaian/API.'); return; }
   setBusy(false);
-
-  if(!res || !res.ok){
-    console.error(res);
-    alert('Proses gagal: ' + (res && res.error || 'Unknown error'));
-    return;
-  }
-
-  // mark statuses
+  if(!res || !res.ok){ console.error(res); alert('Proses gagal: ' + (res && res.error || 'Unknown')); return; }
+  // Tanda status OK
   (res.files||[]).forEach(f=>{
-    filesQueue.forEach(q=>{
-      // kasar: padan melalui panel atau ignore
-      if(q.panelCode === f.panelCode) q.status = 'OK';
-    });
+    filesQueue.forEach(q=>{ if(q.panelCode===f.panelCode) q.status='OK'; });
   });
-
-  // render cards
   renderQueue();
   renderResults(res.files||[]);
 }
-
 function renderResults(files){
   els.outWrap.style.display = 'block';
   els.cards.innerHTML = '';
   els.exportMeta.textContent = files.length ? `${files.length} fail dijana` : 'Tiada fail dijana';
   files.forEach(f=>{
-    const div = document.createElement('div');
-    div.className = 'cardItem';
+    const div = document.createElement('div'); div.className='cardItem';
     div.innerHTML = `
       <div style="font-weight:700">${escapeHtml(f.filename)}</div>
       <div class="muted" style="font-size:13px;margin-top:4px">
         Panel: <b>${escapeHtml(f.panelName || f.panelCode)}</b><br/>
         Baris: ${f.rows} · Jumlah (batch): ${Number(f.amountSum||0).toLocaleString('en-MY')}
       </div>
-      <a class="dl" target="_blank" rel="noopener" href="${escapeHtml(f.downloadUrl)}">Muat turun</a>
-    `;
+      <a class="dl" target="_blank" rel="noopener" href="${escapeHtml(f.downloadUrl)}">Muat turun</a>`;
     els.cards.appendChild(div);
   });
 }
 
-function setBusy(b){
-  els.btnProcess.disabled = b;
-  els.btnRefreshPanels.disabled = b;
-  els.btnClean.disabled = b;
-}
-
-// Clean Now — panggil endpoint buang semua .xlsx dalam folder eksport (dan root “EXPORT-*.xlsx”)
+/* ===================== Clean Now ===================== */
 async function cleanNow(){
-  if(!confirm('Padam SEMUA fail eksport (.xlsx) dalam folder eksport? (Akan ke Trash)')) return;
+  if(!confirm('Padam SEMUA eksport (.xlsx) dalam folder eksport? (Ke Trash)')) return;
   setBusy(true);
-  let res;
-  try{
+  let res; try{
     res = await apiPost({action:'cleanupExportsNow', includeRoot:true});
-  }catch(e){
-    setBusy(false); alert('Ralat rangkaian/API semasa pembersihan.'); return;
-  }
+  }catch(e){ setBusy(false); alert('Ralat rangkaian/API.'); return; }
   setBusy(false);
   alert('Cleanup siap. Dipadam: ' + (res && res.deleted || 0));
 }
 
-// ======== init & events ========
+/* ===================== Events & Init ===================== */
+// Tab1 CRUD
+els.btnRefresh1.addEventListener('click', refreshPanelsBoth);
+// Tab2 actions
+els.btnRefreshPanels.addEventListener('click', refreshPanelsBoth);
 els.btnProcess.addEventListener('click', processAll);
 els.btnClean.addEventListener('click', cleanNow);
-els.btnRefreshPanels.addEventListener('click', refreshPanels);
-
+// Upload widgets
 els.drop.addEventListener('click', ()=> els.fileInput.click());
 els.fileInput.addEventListener('change', e=> addFiles(e.target.files));
+['dragenter','dragover'].forEach(ev=> els.drop.addEventListener(ev, e=>{e.preventDefault(); e.stopPropagation(); els.drop.classList.add('drag');}));
+['dragleave','drop'].forEach(ev=> els.drop.addEventListener(ev, e=>{e.preventDefault(); e.stopPropagation(); els.drop.classList.remove('drag');}));
+els.drop.addEventListener('drop', e=>{ const dt=e.dataTransfer; if(dt&&dt.files) addFiles(dt.files); });
 
-['dragenter','dragover'].forEach(ev=>{
-  els.drop.addEventListener(ev, e=>{ e.preventDefault(); e.stopPropagation(); els.drop.classList.add('drag'); });
-});
-['dragleave','drop'].forEach(ev=>{
-  els.drop.addEventListener(ev, e=>{ e.preventDefault(); e.stopPropagation(); els.drop.classList.remove('drag'); });
-});
-els.drop.addEventListener('drop', e=>{
-  const dt = e.dataTransfer;
-  if(dt && dt.files) addFiles(dt.files);
-});
-
-// boot
-refreshPanels();
+// Boot
+loadPanels(); // isi PANELS dan render jadual
 </script>
 </body>
 </html>
