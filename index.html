@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Panel CSV → SQL Template XLSX</title>
+  <title>Sistem Kak Ros</title>
   <style>
     /* ========= THEME (Light, professional) ========= */
     :root{
-      --bg:#f7fafc; --paper:#ffffff; --ink:#0f172a; --muted:#4b5563;
+      --bg:#8fb5cf; --paper:#ffffff; --ink:#0f172a; --muted:#4b5563;
       --stroke:#e5e7eb; --stroke-strong:#cbd5e1; --brand:#2563eb; --brand-2:#3b82f6;
       --ok:#16a34a; --err:#dc2626; --warn:#f59e0b;
       --chip:#eef2ff; --chip-text:#1e3a8a;
@@ -87,14 +87,14 @@
       <div class="logo"></div>
       <div class="grow">
         <div class="title">Panel CSV → SQL Template XLSX</div>
-        <div class="subtitle">Pengurusan panel (tambah/edit/padam + tukar kod), muat naik berbilang CSV, auto-detect panel, eksport ikut templat.</div>
+        <div class="subtitle">Pengurusan panel (tambah/edit/padam + tukar template).</div>
       </div>
       <span class="chip mono" id="apiHost">api</span>
     </div>
 
     <div class="tabs">
-      <button class="tab active" data-tab="tab1">Halaman 1 — Panel Register</button>
-      <button class="tab" data-tab="tab2">Halaman 2 — Upload & Export</button>
+      <button class="tab active" data-tab="tab1">Daftar Panel</button>
+      <button class="tab" data-tab="tab2">Upload & Export</button>
     </div>
 
     <!-- TAB 1: Panel Register -->
@@ -114,7 +114,7 @@
       </div>
 
       <div class="row" style="justify-content:space-between;margin:14px 0 8px">
-        <div class="muted">Senarai panel di <span class="mono">Sheet1</span>.</div>
+        <div class="muted">Senarai panel di <span class="mono">yang disimpan</span>.</div>
         <input type="search" id="searchPanel" placeholder="Cari nama atau kod…"/>
       </div>
 
