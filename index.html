@@ -11,8 +11,7 @@
       --border:#374151;
     }
     *{box-sizing:border-box}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial;
-         background:var(--bg);color:var(--text)}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial;background:var(--bg);color:var(--text)}
     header{padding:16px 20px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(15,23,42,.85);backdrop-filter: blur(8px);}
     .brand{display:flex;gap:10px;align-items:center}
     .brand h1{font-size:18px;margin:0}
@@ -24,9 +23,7 @@
     .row{display:flex;gap:12px;flex-wrap:wrap}
     .col{flex:1 1 260px}
     label{display:block;font-size:13px;margin:6px 0}
-    input,select,button,textarea{
-      width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:#0b1220;color:var(--text)
-    }
+    input,select,button,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:#0b1220;color:var(--text)}
     button{cursor:pointer}
     .btn{background:var(--muted)}
     .btn-primary{background:var(--accent);color:#04110a;border-color:#0c3}
@@ -345,7 +342,7 @@ function parseCsvQuickStats(text){
       if(idxDate<0 && (hh.indexOf('date')>=0 || hh.indexOf('tarikh')>=0)) idxDate = h;
     }
     var count=0, sum=0;
-    var months = {}; // { '2025-09': n, ...}
+    var months = {};
     for(var r=1;r<rows.length;r++){
       var row = rows[r];
       if(!row || row.length===0) continue;
@@ -385,8 +382,8 @@ function renderFileTable(){
     }
     var monthDominant = '-';
     if(item.stats && item.stats.months){
-      var entries = Object.entries(item.stats.months).sort(function(a,b){ return b[1]-a[1]; });
-      if(entries.length){ monthDominant = entries[0][0]; }
+      var list = Object.entries(item.stats.months).sort(function(a,b){ return b[1]-a[1]; });
+      if(list.length){ monthDominant = list[0][0]; }
     }
     var inferred = item.panelCode || inferPanelFromName(item.name);
     var dropdown = panelDropdownHtml(inferred);
@@ -455,9 +452,7 @@ $('#btnProcess').addEventListener('click', async function(){
   await refreshKnownPanels();
   for(var i=0;i<pendingFiles.length;i++){
     var it = pendingFiles[i];
-    if(!it.panelCode){
-      it.panelCode = inferPanelFromName(it.name);
-    }
+    if(!it.panelCode){ it.panelCode = inferPanelFromName(it.name); }
     if(!it.panelCode){
       showStatus($('#uploadStatus'), 'Panel tidak ditetapkan untuk fail: ' + it.name + '. Sila pilih di dropdown.', 'bad');
       return;
@@ -475,11 +470,13 @@ $('#btnProcess').addEventListener('click', async function(){
     var res = await apiPost({action:'processCsvFiles', files: filesPayload});
     hideStatus($('#uploadStatus'));
     var out = (res && res.files) ? res.files : [];
+    var serverMsg = (res && res.message) ? String(res.message) : '';
     var tb = $('#resultTable tbody'); 
     tb.innerHTML='';
     if(!out.length){
       $('#resultsCard').hidden = false;
-      tb.innerHTML = '<tr><td colspan="5" class="small">Tiada fail dijana.</td></tr>';
+      var msg = serverMsg || 'Tiada fail dijana.';
+      tb.innerHTML = '<tr><td colspan="5" class="small">' + msg + '</td></tr>';
       return;
     }
     for(var k=0;k<out.length;k++){
